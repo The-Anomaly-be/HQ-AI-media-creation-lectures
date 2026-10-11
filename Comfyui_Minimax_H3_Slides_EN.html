@@ -1,0 +1,734 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>ComfyUI + MiniMax H3: The Complete Guide</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap');
+        
+        :root {
+            --glass-bg: rgba(255, 255, 255, 0.85);
+            --glass-border: rgba(255, 255, 255, 0.5);
+            --glass-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --accent-primary: #4f46e5;
+            --accent-secondary: #ec4899;
+            --bg-gradient-1: #e0c3fc;
+            --bg-gradient-2: #8ec5fc;
+            --t: 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+
+        body {
+            background: linear-gradient(135deg, var(--bg-gradient-1) 0%, var(--bg-gradient-2) 100%);
+            background-size: 400% 400%;
+            animation: gradientAnim 15s ease infinite;
+            color: var(--text-main);
+            font-family: 'Inter', system-ui, sans-serif;
+            overflow: hidden;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+        }
+
+        @keyframes gradientAnim {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        * { scrollbar-width: thin; scrollbar-color: #cbd5e1 transparent; }
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+
+        .slider-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .slide {
+            position: absolute;
+            width: 92vw;
+            height: 88vh;
+            max-width: 1200px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--glass-border);
+            border-radius: 32px;
+            box-shadow: var(--glass-shadow);
+            padding: 40px 60px 100px 60px;
+            overflow-y: auto;
+            opacity: 0;
+            pointer-events: none;
+            transform: translateY(40px) scale(0.95);
+            transition: opacity var(--t), transform var(--t);
+            display: flex;
+            flex-direction: column;
+        }
+
+        @media (max-width: 768px) {
+            .slide { padding: 30px 20px 100px 20px; width: 95vw; height: 95vh; border-radius: 20px; }
+        }
+
+        .slide.active { opacity: 1; pointer-events: auto; transform: translateY(0) scale(1); z-index: 10; }
+        .slide.prev { transform: translateY(-40px) scale(0.95); }
+
+        .mono { font-family: 'JetBrains Mono', monospace; }
+        code { font-family: 'JetBrains Mono', monospace; font-size: 0.85em; background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 6px; padding: 2px 6px; color: var(--accent-primary); }
+        .pill { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #475569; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 20px; padding: 4px 12px; font-weight: 600;}
+        
+        .topic-block {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            flex-grow: 1;
+        }
+        .topic-header { display: flex; align-items: center; gap: 16px; margin-bottom: 16px; border-bottom: 2px solid #f1f5f9; padding-bottom: 12px; }
+        .topic-num { font-family: 'JetBrains Mono', monospace; font-size: 28px; font-weight: 800; color: var(--accent-primary); background: #e0e7ff; width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; border-radius: 12px;}
+        .topic-title { font-size: 24px; font-weight: 700; color: var(--text-main); margin: 0;}
+        .topic-tag { font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--accent-secondary); background: #fce7f3; padding: 4px 10px; border-radius: 8px;}
+
+        table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 14px; margin-top: 16px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; }
+        th { font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: #64748b; text-align: left; padding: 16px; background: #f8fafc; border-bottom: 1px solid #e2e8f0; }
+        td { padding: 16px; vertical-align: top; color: #475569; border-bottom: 1px solid #e2e8f0; }
+        tr:last-child td { border-bottom: none; }
+        td b { color: var(--text-main); }
+
+        .floating-nav {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            padding: 12px 24px;
+            border-radius: 100px;
+            display: flex;
+            align-items: center;
+            gap: 24px;
+            z-index: 100;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .btn-nav {
+            background: rgba(255,255,255,0.1);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 44px;
+            height: 44px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .btn-nav:hover:not(:disabled) { background: var(--accent-primary); transform: scale(1.1); }
+        .btn-nav:disabled { opacity: 0.3; cursor: not-allowed; }
+        .page-ind { font-family: 'JetBrains Mono', monospace; font-size: 15px; color: white; font-weight: 600; min-width: 60px; text-align: center; }
+
+        .flow-stage { position: relative; }
+        .flow-stage::after { content: "→"; position: absolute; right: -18px; top: 50%; transform: translateY(-50%); color: #cbd5e1; font-size: 20px; }
+        .flow-stage:last-child::after { display: none; }
+
+        .strip { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; margin-top: 24px; }
+        .tile svg { display: block; width: 100%; height: auto; border-radius: 12px; border: 1px solid #e2e8f0; background: #f8fafc; }
+        .tile span { display: block; text-align: center; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #64748b; margin-top: 8px; font-weight: 600;}
+
+        .vram-track { background: #f1f5f9; border-radius: 6px; position: relative; height: 16px; display: flex; overflow: hidden; box-shadow: inset 0 1px 3px rgba(0,0,0,0.05); }
+        .vram-limit { position: absolute; left: 31.25%; top: -4px; bottom: -4px; width: 2px; background: #ef4444; z-index: 10; box-shadow: 0 0 4px rgba(239,68,68,0.5); }
+        .vram-fill-card { background: linear-gradient(90deg, #4f46e5, #6366f1); height: 100%; }
+        .vram-fill-ram { background: repeating-linear-gradient(45deg, #fcd34d, #fcd34d 4px, #fbbf24 4px, #fbbf24 8px); height: 100%; border-left: 1px solid rgba(255,255,255,0.3); }
+        
+        .axis-line { position: relative; border-top: 2px solid #cbd5e1; height: 20px; margin-top: 10px; }
+        .axis-tick { position: absolute; top: 6px; transform: translateX(-50%); font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #64748b; }
+        .axis-tick.limit { color: #ef4444; font-weight: 700; }
+    </style>
+</head>
+<body>
+
+    <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+        <defs>
+            <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stop-color="#38bdf8"/><stop offset="1" stop-color="#fde047"/>
+            </linearGradient>
+            <filter id="grain" x="0" y="0" width="100%" height="100%">
+                <feTurbulence type="fractalNoise" baseFrequency="0.95" numOctaves="2" seed="11"/>
+                <feColorMatrix type="matrix" values="3.2 0 0 0 -1.1  3.2 0 0 0 -1.1  3.2 0 0 0 -1.1  0 0 0 0 1"/>
+            </filter>
+            <filter id="blur4" x="-10%" y="-10%" width="120%" height="120%"><feGaussianBlur stdDeviation="7"/></filter>
+            <filter id="blur3" x="-10%" y="-10%" width="120%" height="120%"><feGaussianBlur stdDeviation="4"/></filter>
+            <filter id="blur2" x="-10%" y="-10%" width="120%" height="120%"><feGaussianBlur stdDeviation="2"/></filter>
+            <filter id="blur1" x="-10%" y="-10%" width="120%" height="120%"><feGaussianBlur stdDeviation=".8"/></filter>
+            <g id="scene">
+                <rect width="160" height="90" fill="url(#sky)"/>
+                <circle cx="112" cy="47" r="12" fill="#ffffff"/>
+                <path d="M0 64 L28 40 L50 58 L78 32 L112 62 L136 48 L160 64 V90 H0Z" fill="#94a3b8"/>
+                <path d="M0 76 L40 61 L82 73 L122 63 L160 77 V90 H0Z" fill="#334155"/>
+            </g>
+        </defs>
+    </svg>
+
+    <div class="slider-container" id="slider">
+        
+        <!-- SLIDE 1: INTRO -->
+        <div class="slide">
+            <div class="text-center mt-8 mb-12">
+                <h1 class="text-4xl md:text-5xl font-extrabold mb-4 text-slate-900 tracking-tight">Introduction to Local Video Models: Minimax H3</h1>
+                <p class="text-lg text-slate-600 max-w-2xl mx-auto">Every component and setting has a specific function that we will dissect together in this clear and visual guide.</p>
+            </div>
+
+            <div class="topic-block">
+                <div class="topic-header">
+                    <span class="topic-num">1</span>
+                    <h2 class="topic-title">The Big Picture</h2>
+                    <span class="topic-tag">Read this first</span>
+                </div>
+                <p class="text-slate-600 text-base mb-6"><b>H3 does not "film" anything.</b> It starts with a screen of pure static and cleans it up a little at a time until it looks (and sounds) like your prompt. Picture and sound are generated together in the same pass, which is why lips sync with the voice.</p>
+                
+                <div class="grid grid-cols-1 md:grid-cols-5 gap-6">
+                    <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 flow-stage">
+                        <span class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">You</span>
+                        <h4 class="font-bold text-slate-800 text-sm mt-1 mb-2">Prompt</h4>
+                        <p class="text-xs text-slate-500 leading-relaxed">Your words, plus pictures, clips or audio depending on the mode.</p>
+                    </div>
+                    <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 flow-stage">
+                        <span class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">The Reader</span>
+                        <h4 class="font-bold text-slate-800 text-sm mt-1 mb-2">Text Encoder</h4>
+                        <p class="text-xs text-slate-500 leading-relaxed">Reads the prompt and translates it into numbers. (Load CLIP)</p>
+                    </div>
+                    <div class="bg-indigo-50 border border-indigo-200 shadow-md shadow-indigo-100 rounded-xl p-4 flow-stage relative">
+                        <span class="text-[10px] uppercase font-bold text-indigo-500 tracking-wider">The Artist</span>
+                        <h4 class="font-bold text-indigo-900 text-sm mt-1 mb-2">Video Model</h4>
+                        <p class="text-xs text-indigo-700 leading-relaxed">Cleans up the static step by step guided by the reader. Nearly all of your wait is here.</p>
+                    </div>
+                    <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 flow-stage">
+                        <span class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">The Unpackers</span>
+                        <h4 class="font-bold text-slate-800 text-sm mt-1 mb-2">Video & Audio VAE</h4>
+                        <p class="text-xs text-slate-500 leading-relaxed">Turns the compressed version back into real frames and real sound.</p>
+                    </div>
+                    <div class="bg-green-50 border border-green-200 rounded-xl p-4">
+                        <span class="text-[10px] uppercase font-bold text-green-500 tracking-wider">Result</span>
+                        <h4 class="font-bold text-green-900 text-sm mt-1 mb-2">MP4 File</h4>
+                        <p class="text-xs text-green-700 leading-relaxed">24 frames per second, stereo sound.</p>
+                    </div>
+                </div>
+
+                <div class="strip" role="img" aria-label="Six tiles showing static turning into a clear picture as the step count rises">
+                    <div class="tile"><svg viewBox="0 0 160 90"><rect width="160" height="90" filter="url(#grain)"/></svg><span>start: static</span></div>
+                    <div class="tile"><svg viewBox="0 0 160 90"><use href="#scene" filter="url(#blur4)"/><rect width="160" height="90" filter="url(#grain)" opacity=".74"/></svg><span>step 4</span></div>
+                    <div class="tile"><svg viewBox="0 0 160 90"><use href="#scene" filter="url(#blur3)"/><rect width="160" height="90" filter="url(#grain)" opacity=".48"/></svg><span>step 8</span></div>
+                    <div class="tile"><svg viewBox="0 0 160 90"><use href="#scene" filter="url(#blur2)"/><rect width="160" height="90" filter="url(#grain)" opacity=".26"/></svg><span>step 12</span></div>
+                    <div class="tile"><svg viewBox="0 0 160 90"><use href="#scene" filter="url(#blur1)"/><rect width="160" height="90" filter="url(#grain)" opacity=".1"/></svg><span>step 16</span></div>
+                    <div class="tile"><svg viewBox="0 0 160 90"><use href="#scene"/></svg><span>step 20: done</span></div>
+                </div>
+                <p class="text-[13px] text-slate-500 mt-4 text-center">A step is one cleanup pass. More passes mean a cleaner and more detailed result, but a longer wait.</p>
+            </div>
+        </div>
+
+        <!-- SLIDE 2: MODES -->
+        <div class="slide">
+            <div class="topic-block">
+                <div class="topic-header">
+                    <span class="topic-num" style="color:#3b82f6; background:#eff6ff;">2</span>
+                    <h2 class="topic-title">The Modes</h2>
+                    <span class="topic-tag" style="color:#3b82f6; background:#eff6ff;">What you plug in</span>
+                </div>
+                <p class="text-slate-600 mb-6">The letters only describe what goes <b>in</b>. The <b>VA</b> at the end means Video + Audio comes out. Every mode makes sound.</p>
+
+                <div class="overflow-x-auto">
+                    <table>
+                        <thead><tr><th>Mode</th><th>You plug in</th><th>What H3 does with it</th><th>Reach for it when...</th></tr></thead>
+                        <tbody>
+                            <tr class="hover:bg-slate-50 transition-colors">
+                                <td><b class="text-lg text-blue-600 font-mono">T2VA</b><br><span class="text-xs text-slate-400">Text to video</span></td>
+                                <td>A prompt. Nothing else.</td>
+                                <td>Invents everything: the people, the place, the camera, the sound.</td>
+                                <td>You have no starting picture. Total freedom, minimal visual control.</td>
+                            </tr>
+                            <tr class="hover:bg-slate-50 transition-colors">
+                                <td><b class="text-lg text-blue-600 font-mono">I2VA</b><br><span class="text-xs text-slate-400">Image to video</span></td>
+                                <td>A prompt and 1 picture (<code>first_frame</code>).</td>
+                                <td>Your picture becomes the opening frame. The video advances from it.</td>
+                                <td>You already have the exact look you want and need it to move/talk.</td>
+                            </tr>
+                            <tr class="hover:bg-slate-50 transition-colors">
+                                <td><b class="text-lg text-blue-600 font-mono">FL2VA</b><br><span class="text-xs text-slate-400">First & Last frame</span></td>
+                                <td>A prompt, 1 start picture, 1 end picture.</td>
+                                <td>Opens on picture 1, lands on picture 2, and invents the transition between them.</td>
+                                <td>The ending has to hit an exact image (e.g., before/after). Describe the journey, not the pictures.</td>
+                            </tr>
+                            <tr class="hover:bg-slate-50 transition-colors">
+                                <td><b class="text-lg text-blue-600 font-mono">L2VA</b><br><span class="text-xs text-slate-400">Last frame</span></td>
+                                <td>A prompt and 1 end picture.</td>
+                                <td>Invents a beginning to arrive at your picture.</td>
+                                <td>You want a reveal that ends on one specific shot.</td>
+                            </tr>
+                            <tr class="hover:bg-slate-50 transition-colors">
+                                <td><b class="text-lg text-blue-600 font-mono">Ref2VA</b><br><span class="text-xs text-slate-400">Reference to video</span></td>
+                                <td>A prompt and references (up to 9 pictures, 3 videos, 3 audios).</td>
+                                <td>Treats them as examples (face, voice, motion), not as actual animation frames.</td>
+                                <td>You want to place a specific character or voice in a BRAND NEW scene.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- SLIDE 3: PIECES -->
+        <div class="slide">
+            <div class="topic-block">
+                <div class="topic-header">
+                    <span class="topic-num" style="color:#8b5cf6; background:#f5f3ff;">3</span>
+                    <h2 class="topic-title">The Pieces of the Puzzle</h2>
+                    <span class="topic-tag" style="color:#8b5cf6; background:#f5f3ff;">What the files are for</span>
+                </div>
+                <p class="text-slate-600 mb-6">A workflow loads <b>4 model files</b>. Each one has its own node on the canvas.</p>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                    <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow">
+                        <h4 class="font-bold text-lg mb-2 flex justify-between items-center text-slate-800">Diffusion Model <span class="text-[10px] uppercase tracking-widest text-violet-500 bg-violet-50 px-2 py-1 rounded">The Video Model</span></h4>
+                        <p class="text-xs text-slate-400 font-mono mb-4 bg-slate-50 inline-block px-2 py-1 rounded">a.k.a: checkpoint, UNet, DiT</p>
+                        <p class="text-sm text-slate-600 leading-relaxed mb-3"><b>Its job:</b> Creates the video and sound. This is THE central model.</p>
+                        <p class="text-sm text-slate-600 leading-relaxed"><b>Its load in the process:</b> It is the biggest file. This is where you choose the global mode (<code>fl2va</code> or <code>ref2va</code> file).</p>
+                    </div>
+                    <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow">
+                        <h4 class="font-bold text-lg mb-2 flex justify-between items-center text-slate-800">Text Encoder <span class="text-[10px] uppercase tracking-widest text-violet-500 bg-violet-50 px-2 py-1 rounded">The Reader</span></h4>
+                        <p class="text-xs text-slate-400 font-mono mb-4 bg-slate-50 inline-block px-2 py-1 rounded">a.k.a: CLIP, qwen3-vl</p>
+                        <p class="text-sm text-slate-600 leading-relaxed mb-3"><b>Its job:</b> Reads your prompt/images, translates everything into numbers the video model understands.</p>
+                        <p class="text-sm text-slate-600 leading-relaxed"><b>Its load in the process:</b> Massive AI model (32 billion parameters). It runs once per prompt.</p>
+                    </div>
+                    <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow">
+                        <h4 class="font-bold text-lg mb-2 flex justify-between items-center text-slate-800">Video VAE <span class="text-[10px] uppercase tracking-widest text-violet-500 bg-violet-50 px-2 py-1 rounded">Image Unpacker</span></h4>
+                        <p class="text-sm text-slate-600 leading-relaxed mb-3 mt-4"><b>Its job:</b> The video model works on a compressed version. The VAE decompresses everything at the end to create the final frames.</p>
+                        <p class="text-sm text-slate-600 leading-relaxed"><b>Its load in the process:</b> Demands a huge VRAM memory spike at the very end. If it crashes after 100%, this is often why.</p>
+                    </div>
+                    <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow">
+                        <h4 class="font-bold text-lg mb-2 flex justify-between items-center text-slate-800">Audio VAE <span class="text-[10px] uppercase tracking-widest text-violet-500 bg-violet-50 px-2 py-1 rounded">Sound Unpacker</span></h4>
+                        <p class="text-sm text-slate-600 leading-relaxed mb-3 mt-4"><b>Its job:</b> Same thing, but turns the video model's data into 32 kHz stereo sound.</p>
+                        <p class="text-sm text-slate-600 leading-relaxed"><b>Its load in the process:</b> Very little. Small file, rarely causes issues.</p>
+                    </div>
+                </div>
+                
+                <h3 class="text-lg font-bold border-b border-slate-200 pb-2 mb-4 text-slate-800">Other common terms</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 text-sm">
+                        <b class="text-slate-800 block mb-1">LoRA:</b> A "patch" grafted onto the video model to force a style, a face, or to speed it up (Turbo).
+                    </div>
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 text-sm">
+                        <b class="text-slate-800 block mb-1">Example of a LoRA:</b> A Turbo LoRA speeds up the process (8 steps instead of 30) at the expense of some quality.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SLIDE 4: NOMS DE FICHIERS -->
+        <div class="slide">
+            <div class="topic-block">
+                <div class="topic-header">
+                    <span class="topic-num" style="color:#10b981; background:#ecfdf5;">4</span>
+                    <h2 class="topic-title">Decoding Names</h2>
+                    <span class="topic-tag" style="color:#10b981; background:#ecfdf5;">Understanding the letters</span>
+                </div>
+
+                <div class="font-mono text-lg font-bold flex flex-wrap gap-2 mb-8 p-6 bg-slate-50 rounded-xl border border-slate-200 justify-center">
+                    <span class="text-blue-600">minimax_h3</span>_
+                    <span class="text-purple-600">fl2va</span>_
+                    <span class="text-emerald-600">pruned</span>_
+                    <span class="text-amber-500">int8_convrot</span>
+                    <span class="text-slate-400">.safetensors</span>
+                </div>
+
+                <h3 class="font-bold text-slate-800 mb-4 border-b border-slate-200 pb-2">The Magic Number (Formats)</h3>
+                <p class="text-slate-600 text-[14px] mb-6">A model is a giant list of numbers. These letters indicate <b>how many bits are used to store each number</b>. Fewer bits = smaller file, fits better on your card, slightly less accurate result.</p>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8 text-[13px] text-slate-600">
+                    <div class="bg-white p-4 border border-slate-200 rounded-xl shadow-sm"><b class="block font-mono text-slate-900 mb-1">bf16</b>16 bits per number. The original: max quality, huge.</div>
+                    <div class="bg-white p-4 border border-slate-200 rounded-xl shadow-sm"><b class="block font-mono text-slate-900 mb-1">int8</b>8 bits. Half the size of bf16.</div>
+                    <div class="bg-white p-4 border border-slate-200 rounded-xl shadow-sm"><b class="block font-mono text-slate-900 mb-1">convrot</b>A math trick that makes 8-bit high quality.</div>
+                    <div class="bg-white p-4 border border-slate-200 rounded-xl shadow-sm"><b class="block font-mono text-slate-900 mb-1">fp8_scaled</b>The older 8-bit format. Use if int8 crashes for you.</div>
+                    <div class="bg-white p-4 border border-slate-200 rounded-xl shadow-sm"><b class="block font-mono text-slate-900 mb-1">w6a8</b>6 bits stored, 8 bits active. Smallest official diffusion model.</div>
+                    <div class="bg-white p-4 border border-slate-200 rounded-xl shadow-sm"><b class="block font-mono text-slate-900 mb-1">nvfp4</b>NVIDIA 4-bit format. Official text encoder uses this (14.6 GB).</div>
+                    <div class="bg-white p-4 border border-slate-200 rounded-xl shadow-sm"><b class="block font-mono text-slate-900 mb-1">awq</b>The 4-bit rounding method to avoid quality loss.</div>
+                    <div class="bg-white p-4 border border-slate-200 rounded-xl shadow-sm"><b class="block font-mono text-emerald-600 mb-1">pruned</b>~40% smaller with no major loss. Recommended version.</div>
+                    <div class="bg-white p-4 border border-slate-200 rounded-xl shadow-sm"><b class="block font-mono text-slate-900 mb-1">fp16 / fp32</b>Classic storage. Used on VAEs since they are already small.</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SLIDE 5: VRAM CHART -->
+        <div class="slide">
+            <div class="topic-block">
+                <div class="topic-header">
+                    <span class="topic-num" style="color:#10b981; background:#ecfdf5;">5</span>
+                    <h2 class="topic-title">VRAM Space (20 GB)</h2>
+                    <span class="topic-tag" style="color:#10b981; background:#ecfdf5;">Visual scale</span>
+                </div>
+                <p class="text-slate-600 text-[13px] mb-6 flex gap-6 items-center flex-wrap">
+                    <span class="flex items-center"><span class="inline-block w-4 h-3 bg-indigo-500 rounded-sm mr-2"></span> Fits in VRAM</span>
+                    <span class="flex items-center"><span class="inline-block w-4 h-3 rounded-sm mr-2 vram-fill-ram"></span> Spills to PC RAM</span>
+                    <span class="flex items-center"><span class="inline-block w-[2px] h-4 bg-red-500 mr-2 shadow-[0_0_4px_rgba(239,68,68,0.5)]"></span> 20 GB Limit</span>
+                </p>
+
+                <div class="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm">
+                    <div class="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-4">Diffusion Model</div>
+                    
+                    <!-- bf16 -->
+                    <div class="flex items-center gap-4 text-[13px] mb-3 hover:bg-slate-50 p-2 rounded-lg transition-colors">
+                        <div class="w-24 font-mono truncate font-semibold text-slate-700">bf16</div>
+                        <div class="flex-1 vram-track">
+                            <div class="vram-limit"></div>
+                            <div class="vram-fill-card" style="width: 31.25%"></div>
+                            <div class="vram-fill-ram" style="width: 65.1%"></div>
+                        </div>
+                        <div class="w-16 text-right font-mono text-slate-600">61.7 GB</div>
+                        <div class="w-32 text-slate-400 text-xs truncate hidden md:block">Original (too big)</div>
+                    </div>
+                    
+                    <!-- int8_convrot -->
+                    <div class="flex items-center gap-4 text-[13px] mb-3 hover:bg-slate-50 p-2 rounded-lg transition-colors">
+                        <div class="w-24 font-mono truncate font-semibold text-slate-700">int8_convrot</div>
+                        <div class="flex-1 vram-track">
+                            <div class="vram-limit"></div>
+                            <div class="vram-fill-card" style="width: 31.25%"></div>
+                            <div class="vram-fill-ram" style="width: 18.2%"></div>
+                        </div>
+                        <div class="w-16 text-right font-mono text-slate-600">31.7 GB</div>
+                        <div class="w-32 text-slate-400 text-xs truncate hidden md:block">8-bit model</div>
+                    </div>
+
+                    <!-- pruned_int8_convrot -->
+                    <div class="flex items-center gap-4 text-[13px] mb-3 bg-indigo-50/50 p-2 rounded-lg border border-indigo-100">
+                        <div class="w-24 font-mono truncate font-bold text-indigo-700">pruned_int8</div>
+                        <div class="flex-1 vram-track bg-indigo-100">
+                            <div class="vram-limit"></div>
+                            <div class="vram-fill-card" style="width: 30.4%"></div>
+                        </div>
+                        <div class="w-16 text-right font-mono font-bold text-indigo-700">19.5 GB</div>
+                        <div class="w-32 text-indigo-500 text-xs font-semibold truncate hidden md:block">Recommended</div>
+                    </div>
+
+                    <!-- pruned_w6a8 -->
+                    <div class="flex items-center gap-4 text-[13px] mb-6 hover:bg-slate-50 p-2 rounded-lg transition-colors">
+                        <div class="w-24 font-mono truncate font-semibold text-slate-700">pruned_w6a8</div>
+                        <div class="flex-1 vram-track">
+                            <div class="vram-limit"></div>
+                            <div class="vram-fill-card" style="width: 23.2%"></div>
+                        </div>
+                        <div class="w-16 text-right font-mono text-slate-600">14.9 GB</div>
+                        <div class="w-32 text-slate-400 text-xs truncate hidden md:block">Plan B (smaller)</div>
+                    </div>
+
+                    <div class="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-4 mt-6 pt-4 border-t border-slate-100">Text Encoder</div>
+                    
+                    <!-- bf16 txt -->
+                    <div class="flex items-center gap-4 text-[13px] mb-3 hover:bg-slate-50 p-2 rounded-lg transition-colors">
+                        <div class="w-24 font-mono truncate font-semibold text-slate-700">bf16</div>
+                        <div class="flex-1 vram-track">
+                            <div class="vram-limit"></div>
+                            <div class="vram-fill-card" style="width: 31.25%"></div>
+                            <div class="vram-fill-ram" style="width: 43.7%"></div>
+                        </div>
+                        <div class="w-16 text-right font-mono text-slate-600">48.0 GB</div>
+                        <div class="w-32 text-slate-400 text-xs truncate hidden md:block">Original (too big)</div>
+                    </div>
+
+                    <!-- nvfp4_awq txt -->
+                    <div class="flex items-center gap-4 text-[13px] mb-3 bg-indigo-50/50 p-2 rounded-lg border border-indigo-100">
+                        <div class="w-24 font-mono truncate font-bold text-indigo-700">nvfp4_awq</div>
+                        <div class="flex-1 vram-track bg-indigo-100">
+                            <div class="vram-limit"></div>
+                            <div class="vram-fill-card" style="width: 22.8%"></div>
+                        </div>
+                        <div class="w-16 text-right font-mono font-bold text-indigo-700">14.6 GB</div>
+                        <div class="w-32 text-indigo-500 text-xs font-semibold truncate hidden md:block">Recommended</div>
+                    </div>
+                    
+                    <!-- Axis -->
+                    <div class="flex items-center gap-4 mt-2">
+                        <div class="w-24"></div>
+                        <div class="flex-1 axis-line">
+                            <span class="axis-tick" style="left: 0;">0</span>
+                            <span class="axis-tick limit" style="left: 31.25%;">20 GB</span>
+                            <span class="axis-tick" style="left: 62.5%;">40 GB</span>
+                            <span class="axis-tick" style="left: 93.75%;">60 GB</span>
+                        </div>
+                        <div class="w-16"></div>
+                        <div class="w-32 hidden md:block"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SLIDE 6: FICHIERS -->
+        <div class="slide">
+            <div class="topic-block">
+                <div class="topic-header">
+                    <span class="topic-num" style="color:#10b981; background:#ecfdf5;">6</span>
+                    <h2 class="topic-title">Download the exact set</h2>
+                    <span class="topic-tag" style="color:#10b981; background:#ecfdf5;">models/ folders</span>
+                </div>
+                
+                <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 mb-6 text-sm text-slate-600">
+                    This is the official set required by ComfyUI templates. Place each file in its respective subfolder in <code class="bg-white">ComfyUI/models/</code>.
+                </div>
+
+                <div class="overflow-x-auto shadow-sm rounded-xl border border-slate-200">
+                    <table class="!mt-0 !border-none">
+                        <thead><tr><th>Part</th><th>File Name</th><th>Size</th><th>Folder</th></tr></thead>
+                        <tbody>
+                            <tr class="hover:bg-slate-50"><td><b class="text-slate-800">Diffusion Model</b><br><span class="text-[11px] text-slate-400">Text, 1st & last frame</span></td><td class="font-mono text-slate-600">minimax_h3_fl2va_pruned_int8_convrot.safetensors</td><td class="font-mono font-bold text-indigo-600">19.5 GB</td><td class="font-mono text-slate-500">diffusion_models</td></tr>
+                            <tr class="hover:bg-slate-50"><td><b class="text-slate-800">Diffusion Model</b><br><span class="text-[11px] text-slate-400">Only for Reference mode</span></td><td class="font-mono text-slate-600">minimax_h3_ref2va_pruned_int8_convrot.safetensors</td><td class="font-mono font-bold text-indigo-600">19.5 GB</td><td class="font-mono text-slate-500">diffusion_models</td></tr>
+                            <tr class="hover:bg-slate-50"><td><b class="text-slate-800">Text Encoder</b></td><td class="font-mono text-slate-600">qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors</td><td class="font-mono font-bold text-indigo-600">14.6 GB</td><td class="font-mono text-slate-500">text_encoders</td></tr>
+                            <tr class="hover:bg-slate-50"><td><b class="text-slate-800">Video VAE</b></td><td class="font-mono text-slate-600">minimax_h3_video_vae_fp16.safetensors</td><td class="font-mono text-slate-600">4.9 GB</td><td class="font-mono text-slate-500">vae</td></tr>
+                            <tr class="hover:bg-slate-50"><td><b class="text-slate-800">Audio VAE</b></td><td class="font-mono text-slate-600">minimax_h3_audio_vae_fp32.safetensors</td><td class="font-mono text-slate-600">0.6 GB</td><td class="font-mono text-slate-500">vae</td></tr>
+                            <tr class="hover:bg-slate-50 bg-slate-50/50"><td><b class="text-slate-800">Turbo LoRA</b> <span class="text-[11px] text-slate-400">(Optional)</span></td><td class="font-mono text-slate-600">minimax_h3_fl2v_turbo_8step_v1.0_comfyui...</td><td class="font-mono text-slate-600">1.8 GB</td><td class="font-mono text-slate-500">loras</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- SLIDE 7: SETTINGS -->
+        <div class="slide">
+            <div class="topic-block">
+                <div class="topic-header">
+                    <span class="topic-num" style="color:#f59e0b; background:#fef3c7;">7</span>
+                    <h2 class="topic-title">The Settings</h2>
+                    <span class="topic-tag" style="color:#f59e0b; background:#fef3c7;">The Video Model's knobs</span>
+                </div>
+                <p class="text-slate-600 mb-4">Change <b>only one thing at a time with the seed fixed</b>, otherwise you won't know what caused the effect.</p>
+
+                <div class="overflow-x-auto">
+                    <table class="!mt-0">
+                        <thead><tr><th>Setting</th><th>What it actually does</th><th>Starting Value</th></tr></thead>
+                        <tbody>
+                            <tr class="hover:bg-slate-50">
+                                <td><b class="text-slate-800 text-sm">Resolution</b><br><span class="text-xs text-slate-400">Megapixels (MP)</span></td>
+                                <td class="text-sm">Sharpness and detail. Higher means exponentially more VRAM consumption. H3 was trained for 1 MP max.</td>
+                                <td><span class="pill bg-amber-50 border-amber-200 text-amber-700">0.4 MP (864x480)</span><br><span class="text-xs mt-1 block">Go up if it runs well.</span></td>
+                            </tr>
+                            <tr class="hover:bg-slate-50">
+                                <td><b class="text-slate-800 text-sm">Duration</b><br><span class="text-xs text-slate-400">Seconds / Frames</span></td>
+                                <td class="text-sm">Clip duration (always 24 fps). Longer means each step takes more time and VRAM.</td>
+                                <td><span class="pill bg-amber-50 border-amber-200 text-amber-700">5 seconds</span></td>
+                            </tr>
+                            <tr class="hover:bg-slate-50">
+                                <td><b class="text-slate-800 text-sm">FPS</b><br><span class="text-xs text-slate-400">Frames per second</span></td>
+                                <td class="text-sm">H3 ALWAYS creates 24 frames for each second of sound. If changed afterward, sound will desync.</td>
+                                <td><span class="pill bg-slate-100 text-slate-500">24</span> <span class="text-xs">(Do not touch)</span></td>
+                            </tr>
+                            <tr class="hover:bg-slate-50">
+                                <td><b class="text-slate-800 text-sm">Seed</b></td>
+                                <td class="text-sm">The initial static "noise" pattern. Fix it to test settings. Set to random for new takes.</td>
+                                <td><span class="pill bg-amber-50 border-amber-200 text-amber-700">Fixed</span> <span class="text-xs">(for testing)</span></td>
+                            </tr>
+                            <tr class="hover:bg-slate-50">
+                                <td><b class="text-slate-800 text-sm">Steps</b></td>
+                                <td class="text-sm">Cleanup passes. More passes, sharper image and motion (time scales proportionally).</td>
+                                <td><span class="pill bg-amber-50 border-amber-200 text-amber-700">20</span> <span class="text-xs">(12 to 16 for testing)</span></td>
+                            </tr>
+                            <tr class="hover:bg-slate-50">
+                                <td><b class="text-slate-800 text-sm">Sampler / Scheduler</b></td>
+                                <td class="text-sm">The method and pacing used to clean the noise.</td>
+                                <td><span class="pill bg-slate-100 text-slate-500">res_multistep / simple</span></td>
+                            </tr>
+                            <tr class="hover:bg-slate-50">
+                                <td><b class="text-slate-800 text-sm">Turbo (LoRA Lightning)</b></td>
+                                <td class="text-sm">Speeds up process to finish in 8 steps instead of 20 (Great for drafts, loses detail).</td>
+                                <td><span class="pill bg-slate-100 text-slate-500">Disabled for final</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- SLIDE 8: HARDWARE -->
+        <div class="slide">
+            <div class="topic-block">
+                <div class="topic-header">
+                    <span class="topic-num" style="color:#ef4444; background:#fef2f2;">8</span>
+                    <h2 class="topic-title">Hardware and Offloading</h2>
+                    <span class="topic-tag" style="color:#ef4444; background:#fef2f2;">Why is it slow?</span>
+                </div>
+                <p class="text-slate-600 mb-6"><b>H3 is bigger than your graphics card, and that's normal.</b> It works anyway, just a bit slower thanks to a mechanic called <i>Offloading</i>.</p>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 text-sm">
+                    <div class="bg-white border border-slate-200 p-5 rounded-2xl shadow-sm">
+                        <h4 class="font-bold text-red-500 uppercase tracking-wider text-[10px] mb-1">The Workbench</h4>
+                        <p class="font-extrabold text-xl text-slate-800 mb-2">VRAM (20 GB)</p>
+                        <p class="text-slate-500 leading-relaxed">Graphics card memory. Whatever is on it runs at top speed. This is the bottleneck.</p>
+                    </div>
+                    <div class="bg-white border border-slate-200 p-5 rounded-2xl shadow-sm">
+                        <h4 class="font-bold text-red-500 uppercase tracking-wider text-[10px] mb-1">The Shelf</h4>
+                        <p class="font-extrabold text-xl text-slate-800 mb-2">RAM (64 GB)</p>
+                        <p class="text-slate-500 leading-relaxed">PC memory. Whatever doesn't fit on the workbench waits here. Close your Chrome tabs!</p>
+                    </div>
+                    <div class="bg-white border border-slate-200 p-5 rounded-2xl shadow-sm">
+                        <h4 class="font-bold text-red-500 uppercase tracking-wider text-[10px] mb-1">The Shuffle</h4>
+                        <p class="font-extrabold text-xl text-slate-800 mb-2">Offloading</p>
+                        <p class="text-slate-500 leading-relaxed">ComfyUI automatically moves pieces between the shelf and workbench at the right time. It costs time.</p>
+                    </div>
+                </div>
+
+                <h3 class="font-bold text-slate-800 mb-4 border-b border-slate-200 pb-2 text-lg">Troubleshooting (Too slow or VRAM error)</h3>
+                <ol class="list-decimal pl-6 text-slate-600 space-y-3 font-medium">
+                    <li><b>Lower Megapixels:</b> Drop to 0.8 or 0.9 instead of 1 for longer videos. It's the most massive saving.<br>
+                    <span class="text-xs text-slate-400 italic font-normal bg-slate-50 p-2 rounded-lg block mt-2 border border-slate-100">Note: Dropping from 1 MP (1,000,000 pixels) to 0.9 MP (900,000 pixels) saves 100,000 pixels per frame. Dropping to 0.8 MP (800,000 pixels) saves another 100,000. Over a 120-frame video (5s), 0.8 MP spares the calculation of 24 million pixels compared to 1 MP!</span></li>
+                    <li><b>Shorten the clip:</b> Drop back to 5 seconds.</li>
+                    <li><b>Lower Steps:</b> Drop to 16, or use Turbo (8 steps). (Saves time).</li>
+                    <li><b>Use smaller files:</b> Grab the <code>pruned_w6a8</code> model and the <code>int8_convrot</code> Video VAE.</li>
+                    <li><b>Free the PC:</b> Close all other applications. If PC RAM (64 GB) is full, the PC freezes.</li>
+                    <li><span class="text-red-500">"CUDA out of memory" error:</span> The workbench overflowed. Apply points 1, 2, and 4.</li>
+                </ol>
+            </div>
+        </div>
+
+        <!-- SLIDE 9: ERRORS -->
+        <div class="slide">
+            <div class="topic-block">
+                <div class="topic-header">
+                    <span class="topic-num" style="color:#ef4444; background:#fef2f2;">9</span>
+                    <h2 class="topic-title">Troubleshooting and Glossary</h2>
+                    <span class="topic-tag" style="color:#ef4444; background:#fef2f2;">Understanding errors</span>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
+                    <div>
+                        <h3 class="font-bold text-slate-800 mb-4 border-b border-slate-200 pb-3 flex items-center gap-3 text-lg"><span class="bg-red-100 p-2 rounded-lg text-red-600"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span> What an error is telling you</h3>
+                        <dl class="space-y-4">
+                            <div class="bg-slate-50 p-3 rounded-lg border border-slate-100"><dt class="font-mono text-slate-800 font-bold mb-1 text-sm">Red boxes on opening</dt><dd class="text-slate-600 text-sm">Missing custom nodes, or ComfyUI needs an update. Update first, then use ComfyUI Manager.</dd></div>
+                            <div class="bg-slate-50 p-3 rounded-lg border border-slate-100"><dt class="font-mono text-slate-800 font-bold mb-1 text-sm">"Value not in list"</dt><dd class="text-slate-600 text-sm">The file is not in the correct folder (models/...), or doesn't have the exact expected name.</dd></div>
+                            <div class="bg-slate-50 p-3 rounded-lg border border-slate-100"><dt class="font-mono text-slate-800 font-bold mb-1 text-sm">"CUDA out of memory"</dt><dd class="text-slate-600 text-sm">The graphics card (VRAM) is full. Lower resolution, reduce duration.</dd></div>
+                            <div class="bg-slate-50 p-3 rounded-lg border border-slate-100"><dt class="font-mono text-slate-800 font-bold mb-1 text-sm">Dies AFTER the last step</dt><dd class="text-slate-600 text-sm">Usually the video VAE running out of memory while unpacking the final video.</dd></div>
+                            <div class="bg-slate-50 p-3 rounded-lg border border-slate-100"><dt class="font-mono text-slate-800 font-bold mb-1 text-sm">Whole PC freezes or crawls</dt><dd class="text-slate-600 text-sm">PC RAM (64 GB) is full and Windows is using the hard drive. Use smaller models (w6a8).</dd></div>
+                        </dl>
+                    </div>
+
+                    <div>
+                        <h3 class="font-bold text-slate-800 mb-4 border-b border-slate-200 pb-3 flex items-center gap-3 text-lg"><span class="bg-blue-100 p-2 rounded-lg text-blue-600"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21V9l8-5 8 5v12M9 21V9m6 12V9"/></svg></span> Other domain words</h3>
+                        <dl class="space-y-4">
+                            <div class="p-3"><dt class="font-bold text-blue-600 uppercase tracking-wider text-[11px] mb-2">The Plumbing</dt><dd class="text-sm text-slate-600"><b class="text-slate-800">CUDA / PyTorch:</b> PyTorch is ComfyUI's math engine. CUDA is the NVIDIA layer allowing the use of the graphics card. You never touch them, unless the log mentions it needs <code class="bg-slate-100 text-blue-600">cu130</code>.</dd></div>
+                            <div class="p-3"><dt class="font-bold text-blue-600 uppercase tracking-wider text-[11px] mb-2">An add-on</dt><dd class="text-sm text-slate-600"><b class="text-slate-800">Custom Node:</b> Every box on screen is a "node". A Custom Node is created by the community. <b>H3 doesn't need any</b> (they are native).</dd></div>
+                            <div class="p-3"><dt class="font-bold text-blue-600 uppercase tracking-wider text-[11px] mb-2">A popular pack</dt><dd class="text-sm text-slate-600"><b class="text-slate-800">rgthree:</b> A set of convenience nodes (like switches to toggle workflow parts on/off). Very often required online.</dd></div>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SLIDE 10: FIRST RUN & EXERCISES -->
+        <div class="slide">
+            <div class="topic-block">
+                <div class="topic-header">
+                    <span class="topic-num" style="color:#6366f1; background:#e0e7ff;">10</span>
+                    <h2 class="topic-title">Creation Exercise</h2>
+                    <span class="topic-tag" style="color:#6366f1; background:#e0e7ff;">Your first mini movie</span>
+                </div>
+                <p class="text-slate-600 mb-8 text-lg">Put your new knowledge into practice.</p>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 text-slate-600 text-sm">
+                    <div class="bg-slate-50 border border-slate-200 p-8 rounded-2xl">
+                        <h4 class="font-bold text-xl text-slate-800 mb-6 flex items-center gap-3"><span class="bg-indigo-100 text-indigo-600 p-2 rounded-lg"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M7 3v18M17 3v18M3 7.5h4M3 12h18M3 16.5h4M17 7.5h4M17 16.5h4"/></svg></span> Exercise Instructions</h4>
+                        <p class="mb-4 text-base bg-white p-4 rounded-xl border border-slate-200 font-medium text-slate-800 shadow-sm">"A character climbs out the window, jumps into a vehicle, and speeds away"</p>
+                        <p class="mb-4 text-[15px] leading-relaxed">Put this script into a prompt by choosing all the shots, all the details: What style? (film, anime, 50s cartoon, ...), what character? (not necessarily human), what clothes? (Police officer, detective, salesperson, ...), what type of vehicle? (car, bike, helicopter, ...), ... Be original, I don't want to see the same thing twice!</p>
+                        <p class="text-[15px] leading-relaxed font-semibold text-indigo-600">Don't forget to give information about what you want to get visually, but also on the sound level.</p>
+                    </div>
+                    
+                    <div class="bg-slate-50 border border-slate-200 p-8 rounded-2xl">
+                        <h4 class="font-bold text-xl text-slate-800 mb-6 flex items-center gap-3"><span class="bg-indigo-100 text-indigo-600 p-2 rounded-lg"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg></span> Writing the Prompt</h4>
+                        <p class="mb-4 text-[15px] font-semibold text-slate-800">H3 creates image AND sound at the same time.</p>
+                        <p class="mb-4 text-[15px] leading-relaxed">In the same block, describe: <b>what is seen</b>, <b>what is said</b>, and <b>what is heard</b> (the look, camera movements, exact dialogs, music, background noises).</p>
+                        <p class="mb-6 text-[15px] leading-relaxed">The AI understands long and precise descriptions very well.</p>
+                        <div class="bg-white p-4 rounded-xl border-l-4 border-l-indigo-500 shadow-sm">
+                            <p class="text-sm font-semibold text-indigo-900 mb-1">Basic rule of image/video prompting:</p>
+                            <p class="text-sm text-slate-600 italic">Imagine that you are describing a scene precisely to a blind person.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- NAVIGATION CONTROLS -->
+        <div class="floating-nav">
+            <button id="btn-prev" class="btn-nav" title="Previous">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+            </button>
+            <span class="page-ind" id="page-indicator">1 / 10</span>
+            <button id="btn-next" class="btn-nav" title="Next">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+            </button>
+        </div>
+
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const slides = document.querySelectorAll('.slide');
+            const btnPrev = document.getElementById('btn-prev');
+            const btnNext = document.getElementById('btn-next');
+            const indicator = document.getElementById('page-indicator');
+            let currentSlide = 0;
+            const totalSlides = slides.length;
+
+            function updateSlider() {
+                slides.forEach((slide, index) => {
+                    slide.classList.remove('active', 'prev');
+                    if (index === currentSlide) {
+                        slide.classList.add('active');
+                        slide.scrollTop = 0;
+                    } else if (index < currentSlide) {
+                        slide.classList.add('prev');
+                    }
+                });
+
+                btnPrev.disabled = currentSlide === 0;
+                btnNext.disabled = currentSlide === totalSlides - 1;
+                indicator.textContent = `${currentSlide + 1} / ${totalSlides}`;
+            }
+
+            function nextSlide() {
+                if (currentSlide < totalSlides - 1) {
+                    currentSlide++;
+                    updateSlider();
+                }
+            }
+
+            function prevSlide() {
+                if (currentSlide > 0) {
+                    currentSlide--;
+                    updateSlider();
+                }
+            }
+
+            btnNext.addEventListener('click', nextSlide);
+            btnPrev.addEventListener('click', prevSlide);
+
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'ArrowRight' || e.key === ' ') {
+                    e.preventDefault(); 
+                    nextSlide();
+                } else if (e.key === 'ArrowLeft') {
+                    e.preventDefault();
+                    prevSlide();
+                }
+            });
+
+            updateSlider();
+        });
+    </script>
+</body>
+</html>

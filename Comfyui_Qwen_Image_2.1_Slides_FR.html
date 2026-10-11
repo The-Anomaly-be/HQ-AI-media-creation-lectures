@@ -1,0 +1,736 @@
+<!doctype html>
+<html lang="fr">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>ComfyUI + Qwen Image 2.1 : Le Guide Complet</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap');
+        
+        :root {
+            --glass-bg: rgba(255, 255, 255, 0.85);
+            --glass-border: rgba(255, 255, 255, 0.5);
+            --glass-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --accent-primary: #4f46e5;
+            --accent-secondary: #ec4899;
+            --bg-gradient-1: #e0c3fc;
+            --bg-gradient-2: #8ec5fc;
+            --t: 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+
+        body {
+            background: linear-gradient(135deg, var(--bg-gradient-1) 0%, var(--bg-gradient-2) 100%);
+            background-size: 400% 400%;
+            animation: gradientAnim 15s ease infinite;
+            color: var(--text-main);
+            font-family: 'Inter', system-ui, sans-serif;
+            overflow: hidden;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+        }
+
+        @keyframes gradientAnim {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        * { scrollbar-width: thin; scrollbar-color: #cbd5e1 transparent; }
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+
+        .slider-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .slide {
+            position: absolute;
+            width: 92vw;
+            height: 88vh;
+            max-width: 1200px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--glass-border);
+            border-radius: 32px;
+            box-shadow: var(--glass-shadow);
+            padding: 40px 60px 100px 60px;
+            overflow-y: auto;
+            opacity: 0;
+            pointer-events: none;
+            transform: translateY(40px) scale(0.95);
+            transition: opacity var(--t), transform var(--t);
+        }
+
+        @media (max-width: 768px) {
+            .slide { padding: 30px 20px 100px 20px; width: 95vw; height: 95vh; border-radius: 20px; }
+        }
+
+        .slide.active { opacity: 1; pointer-events: auto; transform: translateY(0) scale(1); z-index: 10; }
+        .slide.prev { transform: translateY(-40px) scale(0.95); }
+
+        .mono { font-family: 'JetBrains Mono', monospace; }
+        code { font-family: 'JetBrains Mono', monospace; font-size: 0.85em; background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 6px; padding: 2px 6px; color: var(--accent-primary); }
+        .pill { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #475569; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 20px; padding: 4px 12px; font-weight: 600;}
+        
+        .topic-block {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        }
+        .topic-header { display: flex; align-items: center; gap: 16px; margin-bottom: 16px; border-bottom: 2px solid #f1f5f9; padding-bottom: 12px; }
+        .topic-num { font-family: 'JetBrains Mono', monospace; font-size: 28px; font-weight: 800; color: var(--accent-primary); background: #e0e7ff; width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; border-radius: 12px;}
+        .topic-title { font-size: 24px; font-weight: 700; color: var(--text-main); margin: 0;}
+        .topic-tag { font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--accent-secondary); background: #fce7f3; padding: 4px 10px; border-radius: 8px;}
+
+        table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 14px; margin-top: 16px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; }
+        th { font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: #64748b; text-align: left; padding: 16px; background: #f8fafc; border-bottom: 1px solid #e2e8f0; }
+        td { padding: 16px; vertical-align: top; color: #475569; border-bottom: 1px solid #e2e8f0; }
+        tr:last-child td { border-bottom: none; }
+        td b { color: var(--text-main); }
+
+        .floating-nav {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            padding: 12px 24px;
+            border-radius: 100px;
+            display: flex;
+            align-items: center;
+            gap: 24px;
+            z-index: 100;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .btn-nav {
+            background: rgba(255,255,255,0.1);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 44px;
+            height: 44px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .btn-nav:hover:not(:disabled) { background: var(--accent-primary); transform: scale(1.1); }
+        .btn-nav:disabled { opacity: 0.3; cursor: not-allowed; }
+        .page-ind { font-family: 'JetBrains Mono', monospace; font-size: 15px; color: white; font-weight: 600; min-width: 60px; text-align: center; }
+
+        .flow-stage { position: relative; }
+        .flow-stage::after { content: "→"; position: absolute; right: -18px; top: 50%; transform: translateY(-50%); color: #cbd5e1; font-size: 20px; }
+        .flow-stage:last-child::after { display: none; }
+
+        .strip { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; margin-top: 24px; }
+        .tile svg { display: block; width: 100%; height: auto; border-radius: 12px; border: 1px solid #e2e8f0; background: #f8fafc; }
+        .tile span { display: block; text-align: center; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #64748b; margin-top: 8px; font-weight: 600;}
+
+        /* VRAM Chart specific light theme overrides */
+        .vram-track { background: #f1f5f9; border-radius: 6px; position: relative; height: 16px; display: flex; overflow: hidden; box-shadow: inset 0 1px 3px rgba(0,0,0,0.05); }
+        .vram-limit { position: absolute; left: 50%; top: -4px; bottom: -4px; width: 2px; background: #ef4444; z-index: 10; box-shadow: 0 0 4px rgba(239,68,68,0.5); }
+        .vram-fill-card { background: linear-gradient(90deg, #4f46e5, #6366f1); height: 100%; }
+        .vram-fill-ram { background: repeating-linear-gradient(45deg, #fcd34d, #fcd34d 4px, #fbbf24 4px, #fbbf24 8px); height: 100%; border-left: 1px solid rgba(255,255,255,0.3); }
+        
+        .axis-line { position: relative; border-top: 2px solid #cbd5e1; height: 20px; margin-top: 10px; }
+        .axis-tick { position: absolute; top: 6px; transform: translateX(-50%); font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #64748b; }
+        .axis-tick.limit { color: #ef4444; font-weight: 700; }
+        .axis-tick.faint { color: #94a3b8; }
+        .axis-marker { position: absolute; top: -14px; bottom: 0; width: 1px; background: #e2e8f0; z-index: -1; }
+    </style>
+</head>
+<body>
+
+    <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+        <defs>
+            <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stop-color="#38bdf8"/><stop offset="1" stop-color="#fde047"/>
+            </linearGradient>
+            <filter id="grain" x="0" y="0" width="100%" height="100%">
+                <feTurbulence type="fractalNoise" baseFrequency="0.95" numOctaves="2" seed="11"/>
+                <feColorMatrix type="matrix" values="3.2 0 0 0 -1.1  3.2 0 0 0 -1.1  3.2 0 0 0 -1.1  0 0 0 0 1"/>
+            </filter>
+            <filter id="blur4" x="-10%" y="-10%" width="120%" height="120%"><feGaussianBlur stdDeviation="7"/></filter>
+            <filter id="blur3" x="-10%" y="-10%" width="120%" height="120%"><feGaussianBlur stdDeviation="4"/></filter>
+            <filter id="blur2" x="-10%" y="-10%" width="120%" height="120%"><feGaussianBlur stdDeviation="2"/></filter>
+            <filter id="blur1" x="-10%" y="-10%" width="120%" height="120%"><feGaussianBlur stdDeviation=".8"/></filter>
+            <g id="scene">
+                <rect width="160" height="90" fill="url(#sky)"/>
+                <circle cx="112" cy="47" r="12" fill="#ffffff"/>
+                <path d="M0 64 L28 40 L50 58 L78 32 L112 62 L136 48 L160 64 V90 H0Z" fill="#94a3b8"/>
+                <path d="M0 76 L40 61 L82 73 L122 63 L160 77 V90 H0Z" fill="#334155"/>
+            </g>
+        </defs>
+    </svg>
+
+    <div class="slider-container" id="slider">
+        
+        <!-- SLIDE 1: INTRO -->
+        <div class="slide">
+            <div class="text-center mt-8 mb-12">
+                <h1 class="text-4xl md:text-5xl font-extrabold mb-4 text-slate-900 tracking-tight">Introduction aux modèles locaux : Qwen Image 2.1</h1>
+                <p class="text-lg text-slate-600 max-w-2xl mx-auto">Chaque composant et paramètre a une fonction précise que nous allons décortiquer ensemble dans ce guide clair et visuel.</p>
+            </div>
+
+            <div class="topic-block">
+                <div class="topic-header">
+                    <span class="topic-num">1</span>
+                    <h2 class="topic-title">La vue d'ensemble</h2>
+                    <span class="topic-tag">À lire en premier</span>
+                </div>
+                <p class="text-slate-600 text-base mb-6"><b>Qwen Image 2.1 ne peint pas comme vous le feriez.</b> Il commence avec un écran de bruit statique pur et le nettoie petit à petit jusqu'à ce qu'il ressemble à votre prompt. Le même modèle accomplit deux tâches : créer une image à partir de mots, ou modifier une image que vous lui fournissez.</p>
+                
+                <div class="grid grid-cols-1 md:grid-cols-5 gap-6">
+                    <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 flow-stage">
+                        <span class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Vous</span>
+                        <h4 class="font-bold text-slate-800 text-sm mt-1 mb-2">Prompt</h4>
+                        <p class="text-xs text-slate-500 leading-relaxed">Vos mots, plus une ou plusieurs images si vous faites de l'édition.</p>
+                    </div>
+                    <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 flow-stage">
+                        <span class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Le Lecteur</span>
+                        <h4 class="font-bold text-slate-800 text-sm mt-1 mb-2">Encodeur texte</h4>
+                        <p class="text-xs text-slate-500 leading-relaxed">Lit le prompt, regarde vos images, et traduit tout en nombres. (Load CLIP)</p>
+                    </div>
+                    <div class="bg-indigo-50 border border-indigo-200 shadow-md shadow-indigo-100 rounded-xl p-4 flow-stage relative">
+                        <span class="text-[10px] uppercase font-bold text-indigo-500 tracking-wider">L'Artiste</span>
+                        <h4 class="font-bold text-indigo-900 text-sm mt-1 mb-2">Modèle de diffusion</h4>
+                        <p class="text-xs text-indigo-700 leading-relaxed">Nettoie le bruit guidé par le lecteur. Presque toute l'attente est ici.</p>
+                    </div>
+                    <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 flow-stage">
+                        <span class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Le Décompresseur</span>
+                        <h4 class="font-bold text-slate-800 text-sm mt-1 mb-2">VAE</h4>
+                        <p class="text-xs text-slate-500 leading-relaxed">Transforme la version compressée en vrais pixels, transparence incluse.</p>
+                    </div>
+                    <div class="bg-green-50 border border-green-200 rounded-xl p-4">
+                        <span class="text-[10px] uppercase font-bold text-green-500 tracking-wider">Résultat</span>
+                        <h4 class="font-bold text-green-900 text-sm mt-1 mb-2">Fichier PNG</h4>
+                        <p class="text-xs text-green-700 leading-relaxed">Jusqu'à 2048x2048, avec un fond transparent si demandé.</p>
+                    </div>
+                </div>
+
+                <div class="strip" role="img" aria-label="Six tuiles montrant du bruit statique devenant une image claire à mesure que les étapes augmentent">
+                    <div class="tile"><svg viewBox="0 0 160 90"><rect width="160" height="90" filter="url(#grain)"/></svg><span>départ: statique</span></div>
+                    <div class="tile"><svg viewBox="0 0 160 90"><use href="#scene" filter="url(#blur4)"/><rect width="160" height="90" filter="url(#grain)" opacity=".74"/></svg><span>étape 4</span></div>
+                    <div class="tile"><svg viewBox="0 0 160 90"><use href="#scene" filter="url(#blur3)"/><rect width="160" height="90" filter="url(#grain)" opacity=".48"/></svg><span>étape 8</span></div>
+                    <div class="tile"><svg viewBox="0 0 160 90"><use href="#scene" filter="url(#blur2)"/><rect width="160" height="90" filter="url(#grain)" opacity=".26"/></svg><span>étape 12</span></div>
+                    <div class="tile"><svg viewBox="0 0 160 90"><use href="#scene" filter="url(#blur1)"/><rect width="160" height="90" filter="url(#grain)" opacity=".1"/></svg><span>étape 16</span></div>
+                    <div class="tile"><svg viewBox="0 0 160 90"><use href="#scene"/></svg><span>étape 20: fini</span></div>
+                </div>
+                <p class="text-[13px] text-slate-500 mt-4 text-center">Une étape (step) est une passe de nettoyage. Plus il y a de passes, plus le résultat est propre et détaillé, mais plus l'attente est longue.</p>
+            </div>
+        </div>
+
+        <!-- SLIDE 2: MODES -->
+        <div class="slide">
+            <div class="topic-block">
+                <div class="topic-header">
+                    <span class="topic-num" style="color:#3b82f6; background:#eff6ff;">2</span>
+                    <h2 class="topic-title">Ce qu'il fait</h2>
+                    <span class="topic-tag" style="color:#3b82f6; background:#eff6ff;">Un modèle, cinq tâches</span>
+                </div>
+                <p class="text-slate-600 mb-6">Il n'y a pas de commutateur de mode. <b>Ce que vous branchez et ce que vous demandez détermine la tâche.</b></p>
+
+                <div class="overflow-x-auto">
+                    <table>
+                        <thead><tr><th>Tâche</th><th>Vous lui donnez</th><th>Ce qu'il en fait</th><th>À utiliser quand...</th></tr></thead>
+                        <tbody>
+                            <tr class="hover:bg-slate-50 transition-colors">
+                                <td><b class="text-lg text-blue-600 font-mono">Text to image</b></td>
+                                <td>Un prompt. Rien d'autre.</td>
+                                <td>Invente toute l'image. Exceptionnellement doué pour générer du texte lisible dans l'image (panneaux, affiches).</td>
+                                <td>Vous partez de rien, ou vous avez besoin que les mots dans l'image soient correctement orthographiés.</td>
+                            </tr>
+                            <tr class="hover:bg-slate-50 transition-colors">
+                                <td><b class="text-lg text-blue-600 font-mono">Image edit</b></td>
+                                <td>Un prompt et 1 image (<code>image_1</code>).</td>
+                                <td>Modifie ce que vous demandez et laisse le reste intact. Conserve la taille et la forme originale.</td>
+                                <td>Vous aimez une image mais voulez changer un détail : tenue, fond, lumière, ou retirer un objet.</td>
+                            </tr>
+                            <tr class="hover:bg-slate-50 transition-colors">
+                                <td><b class="text-lg text-blue-600 font-mono">Edit avec références</b></td>
+                                <td>Un prompt et jusqu'à 10 images.</td>
+                                <td><code>image_1</code> est modifiée. Les autres sont des éléments à emprunter : visage, vêtement, style.</td>
+                                <td>Vous voulez combiner des choses. "Mets la chemise de <code>&lt;image2&gt;</code> sur la personne de <code>&lt;image1&gt;</code>."</td>
+                            </tr>
+                            <tr class="hover:bg-slate-50 transition-colors">
+                                <td><b class="text-lg text-blue-600 font-mono">Image Transparente</b></td>
+                                <td>Un prompt enveloppé dans une phrase précise (voir Slide 10).</td>
+                                <td>Génère le sujet sur un fond véritablement transparent (format RGBA).</td>
+                                <td>Vous avez besoin d'un calque détouré (logo, sticker, photo produit) à superposer ailleurs.</td>
+                            </tr>
+                            <tr class="hover:bg-slate-50 transition-colors">
+                                <td><b class="text-lg text-blue-600 font-mono">Background removal</b></td>
+                                <td>Une image et le prompt "Remove the background...".</td>
+                                <td>Renvoie votre sujet avec le fond rendu transparent.</td>
+                                <td>Vous avez déjà l'image et voulez uniquement le détourage.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- SLIDE 3: PIECES -->
+        <div class="slide">
+            <div class="topic-block">
+                <div class="topic-header">
+                    <span class="topic-num" style="color:#8b5cf6; background:#f5f3ff;">3</span>
+                    <h2 class="topic-title">Les Pièces du Puzzle</h2>
+                    <span class="topic-tag" style="color:#8b5cf6; background:#f5f3ff;">À quoi servent les fichiers</span>
+                </div>
+                <p class="text-slate-600 mb-6">Un workflow charge <b>3 fichiers de modèles principaux</b>.</p>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow">
+                        <h4 class="font-bold text-lg mb-2 flex justify-between items-center text-slate-800">Modèle diffusion <span class="text-[10px] uppercase tracking-widest text-violet-500 bg-violet-50 px-2 py-1 rounded">Le Modèle</span></h4>
+                        <p class="text-xs text-slate-400 font-mono mb-4 bg-slate-50 inline-block px-2 py-1 rounded">a.k.a: checkpoint, UNet, DiT</p>
+                        <p class="text-sm text-slate-600 leading-relaxed mb-3"><b>Son rôle :</b> Crée l'image. C'est LE modèle.</p>
+                        <p class="text-sm text-slate-600 leading-relaxed"><b>Sa charge :</b> Travaille à chaque étape (définit la vitesse). Sa petite taille le rend facile à utiliser sur des cartes moyennes.</p>
+                    </div>
+                    <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow">
+                        <h4 class="font-bold text-lg mb-2 flex justify-between items-center text-slate-800">Encodeur texte <span class="text-[10px] uppercase tracking-widest text-violet-500 bg-violet-50 px-2 py-1 rounded">Le Lecteur</span></h4>
+                        <p class="text-xs text-slate-400 font-mono mb-4 bg-slate-50 inline-block px-2 py-1 rounded">a.k.a: CLIP / type: qwen_image</p>
+                        <p class="text-sm text-slate-600 leading-relaxed mb-3"><b>Son rôle :</b> Lit votre prompt/images, transmet au modèle image des nombres.</p>
+                        <p class="text-sm text-slate-600 leading-relaxed"><b>Sa charge :</b> Modèle massif (Qwen3-VL, 8B paramètres), <b>plus gros que le modèle image</b>. S'exécute 1 fois au début.</p>
+                    </div>
+                    <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow">
+                        <h4 class="font-bold text-lg mb-2 flex justify-between items-center text-slate-800">VAE <span class="text-[10px] uppercase tracking-widest text-violet-500 bg-violet-50 px-2 py-1 rounded">Décompresseur</span></h4>
+                        <p class="text-xs text-slate-400 font-mono mb-4 bg-slate-50 inline-block px-2 py-1 rounded">field: vae_name</p>
+                        <p class="text-sm text-slate-600 leading-relaxed mb-3"><b>Son rôle :</b> Transforme le résultat compressé en vrais pixels, et compresse vos images en entrée.</p>
+                        <p class="text-sm text-slate-600 leading-relaxed"><b>Spécificité :</b> Gère 4 canaux (le 4ème est la transparence). Utilisez <code>qwen_image_2.1_vae_bf16</code>.</p>
+                    </div>
+                </div>
+                
+                <h3 class="text-lg font-bold border-b border-slate-200 pb-2 mb-4 text-slate-800">Pièces optionnelles (dans les templates)</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 text-sm text-slate-600">
+                        <b class="text-slate-800 block mb-1">Prompt enhancer (Le Réécrivain) :</b> Un 2ème modèle qui réécrit votre prompt en détail. Coûte 6-9 Go de VRAM. Désactivez-le au début.
+                    </div>
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 text-sm text-slate-600">
+                        <b class="text-slate-800 block mb-1">Qwen Image 2.1 Cache (Accélérateur d'édition) :</b> Calcule la partie redondante d'une édition une seule fois. (Laissez <code>dtype</code> sur <code>int8</code>).
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SLIDE 4: NOMS DE FICHIERS -->
+        <div class="slide">
+            <div class="topic-block">
+                <div class="topic-header">
+                    <span class="topic-num" style="color:#10b981; background:#ecfdf5;">4</span>
+                    <h2 class="topic-title">Décoder les noms</h2>
+                    <span class="topic-tag" style="color:#10b981; background:#ecfdf5;">Comprendre les lettres</span>
+                </div>
+
+                <div class="font-mono text-lg font-bold flex flex-wrap gap-2 mb-8 p-6 bg-slate-50 rounded-xl border border-slate-200 justify-center">
+                    <span class="text-blue-600">qwen_image</span>_
+                    <span class="text-purple-600">2.1</span>_
+                    <span class="text-amber-500">int8_convrot</span>
+                    <span class="text-slate-400">.safetensors</span>
+                </div>
+
+                <h3 class="font-bold text-slate-800 mb-4 border-b border-slate-200 pb-2">Le nombre magique (Les Formats)</h3>
+                <p class="text-slate-600 text-[14px] mb-6">Un modèle est une liste géante de nombres. Ces lettres indiquent <b>le nombre de bits utilisés pour stocker chaque nombre</b>. Moins de bits = fichier plus petit, rentre mieux sur votre carte, résultat légèrement moins précis.</p>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8 text-[13px] text-slate-600">
+                    <div class="bg-white p-4 border border-slate-200 rounded-xl shadow-sm"><b class="block font-mono text-slate-900 mb-1 text-base">bf16</b>16 bits par nombre. L'original, la qualité maximale, le plus gros fichier.</div>
+                    <div class="bg-white p-4 border border-slate-200 rounded-xl shadow-sm"><b class="block font-mono text-slate-900 mb-1 text-base">int8</b>8 bits par nombre. Environ la moitié de la taille du bf16 original.</div>
+                    <div class="bg-white p-4 border border-slate-200 rounded-xl shadow-sm"><b class="block font-mono text-slate-900 mb-1 text-base">convrot</b>L'astuce qui rend le int8 très qualitatif (mélange avant arrondissement).</div>
+                    <div class="bg-white p-4 border border-slate-200 rounded-xl shadow-sm"><b class="block font-mono text-slate-900 mb-1 text-base">w4a8</b>4-bit pour le stockage, 8-bit actif. Encore plus petit que le int8.</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SLIDE 5: VRAM CHART -->
+        <div class="slide">
+            <div class="topic-block">
+                <div class="topic-header">
+                    <span class="topic-num" style="color:#10b981; background:#ecfdf5;">5</span>
+                    <h2 class="topic-title">Espace VRAM (16 Go)</h2>
+                    <span class="topic-tag" style="color:#10b981; background:#ecfdf5;">Échelle visuelle</span>
+                </div>
+                <p class="text-slate-600 text-[13px] mb-6 flex gap-6 items-center flex-wrap">
+                    <span class="flex items-center"><span class="inline-block w-4 h-3 bg-indigo-500 rounded-sm mr-2"></span> Rentre dans la VRAM</span>
+                    <span class="flex items-center"><span class="inline-block w-4 h-3 rounded-sm mr-2 vram-fill-ram"></span> Déborde sur la RAM PC</span>
+                    <span class="flex items-center"><span class="inline-block w-[2px] h-4 bg-red-500 mr-2 shadow-[0_0_4px_rgba(239,68,68,0.5)]"></span> Limite 16 Go</span>
+                </p>
+
+                <div class="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm">
+                    
+                    <div class="relative z-0">
+                        <div class="absolute inset-0 pointer-events-none" style="z-index:-1;">
+                            <div class="axis-marker" style="left: 25%;"></div>
+                            <div class="axis-marker" style="left: 37.5%;"></div>
+                            <div class="axis-marker" style="left: 75%;"></div>
+                        </div>
+
+                        <div class="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-4 relative z-10">Modèle de Diffusion</div>
+                        
+                        <div class="flex items-center gap-4 text-[13px] mb-3 hover:bg-slate-50 p-2 rounded-lg transition-colors relative z-10">
+                            <div class="w-24 font-mono truncate font-semibold text-slate-700">bf16</div>
+                            <div class="flex-1 vram-track">
+                                <div class="vram-limit"></div>
+                                <div class="vram-fill-card" style="width: 41.25%"></div>
+                            </div>
+                            <div class="w-16 text-right font-mono text-slate-600">13.2 Go</div>
+                        </div>
+                        
+                        <div class="flex items-center gap-4 text-[13px] mb-6 bg-indigo-50/50 p-2 rounded-lg border border-indigo-100 relative z-10">
+                            <div class="w-24 font-mono truncate font-bold text-indigo-700">int8_convrot</div>
+                            <div class="flex-1 vram-track bg-indigo-100">
+                                <div class="vram-limit"></div>
+                                <div class="vram-fill-card" style="width: 21.25%"></div>
+                            </div>
+                            <div class="w-16 text-right font-mono font-bold text-indigo-700">6.8 Go</div>
+                            <div class="w-32 text-indigo-500 text-xs font-semibold truncate hidden md:block">Recommandé</div>
+                        </div>
+
+                        <div class="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-4 mt-6 pt-4 border-t border-slate-100 relative z-10">Encodeur Texte (Qwen3-VL)</div>
+                        
+                        <div class="flex items-center gap-4 text-[13px] mb-3 hover:bg-slate-50 p-2 rounded-lg transition-colors relative z-10">
+                            <div class="w-24 font-mono truncate font-semibold text-slate-700">bf16</div>
+                            <div class="flex-1 vram-track">
+                                <div class="vram-limit"></div>
+                                <div class="vram-fill-card" style="width: 50%"></div>
+                                <div class="vram-fill-ram" style="width: 0.9%"></div>
+                            </div>
+                            <div class="w-16 text-right font-mono text-slate-600">16.3 Go</div>
+                        </div>
+
+                        <div class="flex items-center gap-4 text-[13px] mb-3 bg-indigo-50/50 p-2 rounded-lg border border-indigo-100 relative z-10">
+                            <div class="w-24 font-mono truncate font-bold text-indigo-700">int8_convrot</div>
+                            <div class="flex-1 vram-track bg-indigo-100">
+                                <div class="vram-limit"></div>
+                                <div class="vram-fill-card" style="width: 27.2%"></div>
+                            </div>
+                            <div class="w-16 text-right font-mono font-bold text-indigo-700">8.7 Go</div>
+                            <div class="w-32 text-indigo-500 text-xs font-semibold truncate hidden md:block">Recommandé</div>
+                        </div>
+
+                        <div class="flex items-center gap-4 text-[13px] mb-6 hover:bg-slate-50 p-2 rounded-lg transition-colors relative z-10">
+                            <div class="w-24 font-mono truncate font-semibold text-slate-700">w4a8</div>
+                            <div class="flex-1 vram-track">
+                                <div class="vram-limit"></div>
+                                <div class="vram-fill-card" style="width: 18.4%"></div>
+                            </div>
+                            <div class="w-16 text-right font-mono text-slate-600">5.9 Go</div>
+                        </div>
+
+                        <div class="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-4 mt-6 pt-4 border-t border-slate-100 relative z-10">Prompt Enhancer (Optionnel)</div>
+                        <div class="flex items-center gap-4 text-[13px] mb-3 hover:bg-slate-50 p-2 rounded-lg transition-colors relative z-10">
+                            <div class="w-24 font-mono truncate font-semibold text-slate-700">int8_convrot</div>
+                            <div class="flex-1 vram-track">
+                                <div class="vram-limit"></div>
+                                <div class="vram-fill-card" style="width: 27.5%"></div>
+                            </div>
+                            <div class="w-16 text-right font-mono text-slate-600">8.8 Go</div>
+                        </div>
+
+                        <!-- Axis -->
+                        <div class="flex items-center gap-4 mt-4 relative z-10">
+                            <div class="w-24"></div>
+                            <div class="flex-1 axis-line">
+                                <span class="axis-tick faint" style="left: 0;">0</span>
+                                <span class="axis-tick faint" style="left: 25%;">8</span>
+                                <span class="axis-tick faint" style="left: 37.5%;">12</span>
+                                <span class="axis-tick limit" style="left: 50%;">16 Go</span>
+                                <span class="axis-tick faint" style="left: 75%;">24</span>
+                                <span class="axis-tick faint" style="left: 100%;">32</span>
+                            </div>
+                            <div class="w-16"></div>
+                            <div class="w-32 hidden md:block"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SLIDE 6: FICHIERS -->
+        <div class="slide">
+            <div class="topic-block">
+                <div class="topic-header">
+                    <span class="topic-num" style="color:#10b981; background:#ecfdf5;">6</span>
+                    <h2 class="topic-title">Téléchargez l'ensemble exact</h2>
+                    <span class="topic-tag" style="color:#10b981; background:#ecfdf5;">Dossiers models/</span>
+                </div>
+                
+                <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 mb-6 text-sm text-slate-600">
+                    C'est l'ensemble exact requis par les modèles (templates) intégrés de ComfyUI. Placez chaque fichier dans son sous-dossier respectif dans <code class="bg-white">ComfyUI/models/</code>.
+                </div>
+
+                <div class="overflow-x-auto shadow-sm rounded-xl border border-slate-200">
+                    <table class="!mt-0 !border-none">
+                        <thead><tr><th>Partie</th><th>Nom du Fichier</th><th>Taille</th><th>Dossier</th></tr></thead>
+                        <tbody>
+                            <tr class="hover:bg-slate-50"><td><b class="text-slate-800">Modèle de Diffusion</b></td><td class="font-mono text-slate-600">qwen_image_2.1_int8_convrot.safetensors</td><td class="font-mono font-bold text-indigo-600">6.8 Go</td><td class="font-mono text-slate-500">diffusion_models</td></tr>
+                            <tr class="hover:bg-slate-50"><td><b class="text-slate-800">Encodeur Texte</b></td><td class="font-mono text-slate-600">qwen3vl_8b_int8_convrot.safetensors</td><td class="font-mono font-bold text-indigo-600">8.7 Go</td><td class="font-mono text-slate-500">text_encoders</td></tr>
+                            <tr class="hover:bg-slate-50"><td><b class="text-slate-800">VAE</b></td><td class="font-mono text-slate-600">qwen_image_2.1_vae_bf16.safetensors</td><td class="font-mono text-slate-600">0.6 Go</td><td class="font-mono text-slate-500">vae</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <p class="text-[13px] text-slate-500 mt-6 bg-amber-50 p-4 rounded-xl border border-amber-100"><b>Plus petit n'est pas automatiquement meilleur.</b> Un plus petit fichier n'aide que pour rentrer sur la carte graphique. Chaque baisse de bits sacrifie un peu de précision. Sur une carte 16 Go, ce lot par défaut (int8) rentre parfaitement. La vraie "amélioration" à tester si vous avez la mémoire est le modèle de diffusion en <code class="bg-white">bf16</code>.</p>
+            </div>
+        </div>
+
+        <!-- SLIDE 7: SETTINGS -->
+        <div class="slide">
+            <div class="topic-block">
+                <div class="topic-header">
+                    <span class="topic-num" style="color:#f59e0b; background:#fef3c7;">7</span>
+                    <h2 class="topic-title">Les Paramètres (Settings)</h2>
+                    <span class="topic-tag" style="color:#f59e0b; background:#fef3c7;">Les molettes du Modèle Image</span>
+                </div>
+                <p class="text-slate-600 mb-4">Ne modifiez <b>qu'une seule chose à la fois avec la graine (seed) fixée</b>, sinon vous ne saurez pas ce qui a fait effet.</p>
+
+                <div class="overflow-x-auto">
+                    <table class="!mt-0">
+                        <thead><tr><th>Paramètre</th><th>Ce que ça fait concrètement</th><th>Valeur de départ</th></tr></thead>
+                        <tbody>
+                            <tr class="hover:bg-slate-50">
+                                <td><b class="text-slate-800 text-sm">Résolution</b><br><span class="text-xs text-slate-400">Mégapixels (MP)</span></td>
+                                <td class="text-sm">Netteté et détails. Le template calcule la largeur et hauteur depuis les MP + Ratio. Max natif : 2048x2048.</td>
+                                <td><span class="pill bg-amber-50 border-amber-200 text-amber-700">1 MP (1024x1024)</span><br><span class="text-xs mt-1 block">Passez à 4MP si ça tourne bien.</span></td>
+                            </tr>
+                            <tr class="hover:bg-slate-50">
+                                <td><b class="text-slate-800 text-sm">Seed (Graine)</b></td>
+                                <td class="text-sm">Le motif de bruit statique initial.</td>
+                                <td><span class="pill bg-amber-50 border-amber-200 text-amber-700">Fixe</span> <span class="text-xs">(pour tests)</span></td>
+                            </tr>
+                            <tr class="hover:bg-slate-50">
+                                <td><b class="text-slate-800 text-sm">Steps (Étapes)</b></td>
+                                <td class="text-sm">Passes de nettoyage. Plus y en a, meilleur est le texte et les détails. 50 étapes prend 2x plus de temps que 25.</td>
+                                <td><span class="pill bg-amber-50 border-amber-200 text-amber-700">25</span><br><span class="text-xs mt-1 block">Montez à 30+ si texte flou.</span></td>
+                            </tr>
+                            <tr class="hover:bg-slate-50">
+                                <td><b class="text-slate-800 text-sm">CFG</b></td>
+                                <td class="text-sm">Force du respect du prompt. À 1 = Off. Au dessus de 1, le modèle s'exécute 2x par étape.</td>
+                                <td><span class="pill bg-amber-50 border-amber-200 text-amber-700">1</span> <span class="text-xs">(2 si Négatif)</span></td>
+                            </tr>
+                            <tr class="hover:bg-slate-50">
+                                <td><b class="text-slate-800 text-sm">Negative prompt</b></td>
+                                <td class="text-sm">Ce que vous ne voulez pas voir.</td>
+                                <td><span class="pill bg-slate-100 text-slate-400">Ignoré si CFG est à 1.</span></td>
+                            </tr>
+                            <tr class="hover:bg-slate-50">
+                                <td><b class="text-slate-800 text-sm">Sampler / Scheduler</b></td>
+                                <td class="text-sm">Méthode et rythme de nettoyage.</td>
+                                <td><span class="pill bg-slate-100 text-slate-500">euler / simple</span></td>
+                            </tr>
+                            <tr class="hover:bg-slate-50">
+                                <td><b class="text-slate-800 text-sm">Turbo</b></td>
+                                <td class="text-sm">Version 8-step. Fini 3x plus vite, mais perte de détails.</td>
+                                <td><span class="pill bg-slate-100 text-slate-500">8 steps</span> <span class="text-xs">(Brouillons)</span></td>
+                            </tr>
+                            <tr class="hover:bg-slate-50">
+                                <td><b class="text-slate-800 text-sm">resolution</b><br><span class="text-xs text-slate-400">Mode édition seul</span></td>
+                                <td class="text-sm">Résolution à laquelle le modèle regarde vos images de référence (0 = taille originale).</td>
+                                <td><span class="pill bg-slate-100 text-slate-500">1024</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- SLIDE 8: HARDWARE -->
+        <div class="slide">
+            <div class="topic-block">
+                <div class="topic-header">
+                    <span class="topic-num" style="color:#ef4444; background:#fef2f2;">8</span>
+                    <h2 class="topic-title">Matériel et Offloading</h2>
+                    <span class="topic-tag" style="color:#ef4444; background:#fef2f2;">Un modèle très accessible</span>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 text-sm">
+                    <div class="bg-white border border-slate-200 p-5 rounded-2xl shadow-sm">
+                        <h4 class="font-bold text-red-500 uppercase tracking-wider text-[10px] mb-1">L'établi</h4>
+                        <p class="font-extrabold text-xl text-slate-800 mb-2">VRAM (ex: 16 Go)</p>
+                        <p class="text-slate-500 leading-relaxed">Mémoire de la carte graphique. Ce qui est dessus s'exécute à pleine vitesse. Paramètre crucial.</p>
+                    </div>
+                    <div class="bg-white border border-slate-200 p-5 rounded-2xl shadow-sm">
+                        <h4 class="font-bold text-red-500 uppercase tracking-wider text-[10px] mb-1">L'étagère</h4>
+                        <p class="font-extrabold text-xl text-slate-800 mb-2">RAM (ex: 32 Go)</p>
+                        <p class="text-slate-500 leading-relaxed">Mémoire du PC. Ce qui ne rentre pas sur l'établi attend ici en file indienne.</p>
+                    </div>
+                    <div class="bg-white border border-slate-200 p-5 rounded-2xl shadow-sm">
+                        <h4 class="font-bold text-red-500 uppercase tracking-wider text-[10px] mb-1">Le Va-et-vient</h4>
+                        <p class="font-extrabold text-xl text-slate-800 mb-2">Offloading</p>
+                        <p class="text-slate-500 leading-relaxed">ComfyUI déplace automatiquement les morceaux entre l'étagère et l'établi. Ça coûte du temps.</p>
+                    </div>
+                </div>
+
+                <div class="bg-slate-50 border border-slate-200 p-5 rounded-xl mb-6 text-sm text-slate-600 shadow-sm">
+                    <b class="text-slate-800">Les chiffres :</b> L'ensemble par défaut pèse environ <b>16 Go au total</b>. Ils ne sont pas tous sur la carte en même temps. Ils <b>chacun leur tour</b>. Sur 16 Go, rien ne déborde. Sur 12 Go, ça passe toujours. Sur 8 Go, le Lecteur ne rentre pas, c'est là qu'intervient la version <code>w4a8</code> du lecteur.
+                </div>
+
+                <h3 class="font-bold text-slate-800 mb-4 border-b border-slate-200 pb-2 text-lg">Trop lent ou Out of Memory ? Leviers dans l'ordre :</h3>
+                <ol class="list-decimal pl-6 text-slate-600 space-y-3 font-medium">
+                    <li><b>Baissez les Mégapixels :</b> Revenez à 1 MP.</li>
+                    <li><b>Baissez les Steps :</b> 25, ou utilisez Turbo (8 steps).</li>
+                    <li><b>Désactivez le Prompt Enhancer :</b> C'est un modèle entier supplémentaire à charger.</li>
+                    <li><b>Prenez un plus petit Lecteur :</b> <code>qwen3vl_8b_w4a8</code> (5.9 Go) au lieu du int8.</li>
+                    <li><b>Réduisez le Cache d'Édition :</b> Mettez <code>dtype</code> sur <code>int8</code> sur le nœud Qwen Cache.</li>
+                    <li><b>Libérez le PC :</b> Fermez toutes les autres applications.</li>
+                </ol>
+            </div>
+        </div>
+
+        <!-- SLIDE 9: ERRORS -->
+        <div class="slide">
+            <div class="topic-block">
+                <div class="topic-header">
+                    <span class="topic-num" style="color:#ef4444; background:#fef2f2;">9</span>
+                    <h2 class="topic-title">Dépannage et Lexique</h2>
+                    <span class="topic-tag" style="color:#ef4444; background:#fef2f2;">Comprendre les erreurs</span>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
+                    <div>
+                        <h3 class="font-bold text-slate-800 mb-4 border-b border-slate-200 pb-3 flex items-center gap-3 text-lg"><span class="bg-red-100 p-2 rounded-lg text-red-600"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span> Les Erreurs Courantes</h3>
+                        <dl class="space-y-4">
+                            <div class="bg-slate-50 p-3 rounded-lg border border-slate-100"><dt class="font-mono text-slate-800 font-bold mb-1 text-sm">Boîtes rouges à l'ouverture</dt><dd class="text-slate-600 text-sm">Nœuds personnalisés manquants ou ComfyUI pas à jour. Mettez à jour puis utilisez ComfyUI Manager.</dd></div>
+                            <div class="bg-slate-50 p-3 rounded-lg border border-slate-100"><dt class="font-mono text-slate-800 font-bold mb-1 text-sm">"Value not in list"</dt><dd class="text-slate-600 text-sm">Le fichier n'est pas dans le bon dossier, ou n'a pas le nom exact.</dd></div>
+                            <div class="bg-slate-50 p-3 rounded-lg border border-slate-100"><dt class="font-mono text-slate-800 font-bold mb-1 text-sm">"CUDA out of memory"</dt><dd class="text-slate-600 text-sm">La VRAM de la carte est pleine. Baissez la résolution, testez les étapes Slide 8.</dd></div>
+                            <div class="bg-slate-50 p-3 rounded-lg border border-slate-100"><dt class="font-mono text-slate-800 font-bold mb-1 text-sm">Plante APRES la fin de l'étape</dt><dd class="text-slate-600 text-sm">Souvent le VAE qui manque de mémoire pour décompresser l'image finale. Baissez la résolution.</dd></div>
+                            <div class="bg-slate-50 p-3 rounded-lg border border-slate-100"><dt class="font-mono text-slate-800 font-bold mb-1 text-sm">Le PC entier fige ou rampe</dt><dd class="text-slate-600 text-sm">La RAM PC est pleine. Fermez Chrome, utilisez de plus petits modèles.</dd></div>
+                        </dl>
+                    </div>
+
+                    <div>
+                        <h3 class="font-bold text-slate-800 mb-4 border-b border-slate-200 pb-3 flex items-center gap-3 text-lg"><span class="bg-blue-100 p-2 rounded-lg text-blue-600"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21V9l8-5 8 5v12M9 21V9m6 12V9"/></svg></span> Mots Techniques</h3>
+                        <dl class="space-y-4">
+                            <div class="p-3"><dt class="font-bold text-blue-600 uppercase tracking-wider text-[11px] mb-2">La Plomberie</dt><dd class="text-sm text-slate-600"><b class="text-slate-800">CUDA / PyTorch :</b> PyTorch est le moteur mathématique. CUDA est la couche NVIDIA pour la carte graphique. Vous n'y touchez pas. <code class="bg-slate-100 text-blue-600">cu130</code> dans les logs veut juste dire la version CUDA.</dd></div>
+                            <div class="p-3"><dt class="font-bold text-blue-600 uppercase tracking-wider text-[11px] mb-2">Une extension</dt><dd class="text-sm text-slate-600"><b class="text-slate-800">Custom Node :</b> Chaque boîte à l'écran est un "nœud". Un Custom Node est une boîte de la communauté. <b>Qwen 2.1 n'en a besoin d'aucun</b> (intégrés natifs).</dd></div>
+                            <div class="p-3"><dt class="font-bold text-blue-600 uppercase tracking-wider text-[11px] mb-2">Un pack très populaire</dt><dd class="text-sm text-slate-600"><b class="text-slate-800">rgthree :</b> Nœuds de confort (stacker de LoRA, interrupteurs...).</dd></div>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SLIDE 10: FIRST RUN -->
+        <div class="slide">
+            <div class="topic-block">
+                <div class="topic-header">
+                    <span class="topic-num" style="color:#6366f1; background:#e0e7ff;">10</span>
+                    <h2 class="topic-title">Premier lancement</h2>
+                    <span class="topic-tag" style="color:#6366f1; background:#e0e7ff;">Un point de départ fiable</span>
+                </div>
+                <p class="text-slate-600 mb-8 text-lg">Faites fonctionner une image simple avec la configuration officielle <b>avant</b> de tenter des choses complexes.</p>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 text-slate-600 text-sm">
+                    <div class="bg-slate-50 border border-slate-200 p-8 rounded-2xl">
+                        <h4 class="font-bold text-xl text-slate-800 mb-6 flex items-center gap-3"><span class="bg-indigo-100 text-indigo-600 p-2 rounded-lg"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg></span> La Recette</h4>
+                        <ol class="list-decimal pl-5 space-y-4 font-medium">
+                            <li><b>Mettez ComfyUI à jour :</b> Le support de Qwen 2.1 est récent.</li>
+                            <li><b>Ouvrez le Template intégré :</b> Menu Workflow > Browse Templates > Cherchez "Qwen Image 2.1" > Prenez Text to Image.</li>
+                            <li><b>Placez les fichiers :</b> L'ensemble exact listé en Slide 6, dans leurs bons dossiers.</li>
+                            <li><b>Laissez les réglages par défaut :</b> 1 MP, 25 steps, CFG 1, euler, simple.</li>
+                            <li><b>Lancez !</b> Le premier rendu est lent car il doit charger les gros fichiers.</li>
+                            <li><b>Puis, tentez une édition :</b> Ouvrez le template "Image Edit", il utilise les 3 mêmes fichiers.</li>
+                        </ol>
+                    </div>
+                    
+                    <div class="bg-slate-50 border border-slate-200 p-8 rounded-2xl">
+                        <h4 class="font-bold text-xl text-slate-800 mb-6 flex items-center gap-3"><span class="bg-indigo-100 text-indigo-600 p-2 rounded-lg"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg></span> Exercices</h4>
+                        <p class="mb-4 text-[15px] leading-relaxed"><b>1) Créer une image d'un lapin avec un chapeau:</b> Décrivez de manière détaillée (l'apparence du sujet, le décor, l'éclairage, le type de prise de vue, le style - photo, dessin animé, manga, ...). Pour du texte dans l'image, mettez les mots exacts "entre guillemets".</p>
+                        <p class="mb-4 text-[15px] leading-relaxed"><b>2) Editez cette image:</b> Demandez-lui de transformer le chapeau en un autre objet en utilisant l'image créée comme image de référence. Allez chercher le bon workflow dans les modèles si nécessaire.</p>
+                        <p class="mb-4 text-[15px] leading-relaxed"><b>3) Créez un prop avec fond transparent:</b> Pour les besoins d'un film, vous avez besoin d'un impact de balle de gros calibre sur un mur de brique, créez un prop de petite taille (512x512) avec un fond transparent qui correspond.</p>
+                        
+                        <div class="bg-white p-4 rounded-xl border-l-4 border-l-indigo-500 shadow-sm mt-6">
+                            <p class="text-sm font-semibold text-indigo-900 mb-2">Prompt transparent exact :</p>
+                            <p class="font-mono text-xs text-slate-600 break-words">This is an RGBA format image with transparency. [votre description ici]. The image has an alpha channel and a transparent background.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- NAVIGATION CONTROLS -->
+        <div class="floating-nav">
+            <button id="btn-prev" class="btn-nav" title="Précédent">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+            </button>
+            <span class="page-ind" id="page-indicator">1 / 10</span>
+            <button id="btn-next" class="btn-nav" title="Suivant">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+            </button>
+        </div>
+
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const slides = document.querySelectorAll('.slide');
+            const btnPrev = document.getElementById('btn-prev');
+            const btnNext = document.getElementById('btn-next');
+            const indicator = document.getElementById('page-indicator');
+            let currentSlide = 0;
+            const totalSlides = slides.length;
+
+            function updateSlider() {
+                slides.forEach((slide, index) => {
+                    slide.classList.remove('active', 'prev');
+                    if (index === currentSlide) {
+                        slide.classList.add('active');
+                        slide.scrollTop = 0;
+                    } else if (index < currentSlide) {
+                        slide.classList.add('prev');
+                    }
+                });
+
+                btnPrev.disabled = currentSlide === 0;
+                btnNext.disabled = currentSlide === totalSlides - 1;
+                indicator.textContent = `${currentSlide + 1} / ${totalSlides}`;
+            }
+
+            function nextSlide() {
+                if (currentSlide < totalSlides - 1) {
+                    currentSlide++;
+                    updateSlider();
+                }
+            }
+
+            function prevSlide() {
+                if (currentSlide > 0) {
+                    currentSlide--;
+                    updateSlider();
+                }
+            }
+
+            btnNext.addEventListener('click', nextSlide);
+            btnPrev.addEventListener('click', prevSlide);
+
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'ArrowRight' || e.key === ' ') {
+                    e.preventDefault(); 
+                    nextSlide();
+                } else if (e.key === 'ArrowLeft') {
+                    e.preventDefault();
+                    prevSlide();
+                }
+            });
+
+            updateSlider();
+        });
+    </script>
+</body>
+</html>
