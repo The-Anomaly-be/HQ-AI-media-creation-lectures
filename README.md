@@ -34,6 +34,12 @@ Slides de support pour une introduction en présentiel à l'utilisation de Comfy
 - [Consulter le document .html](./Comfyui_Qwen_Image_2.1_Slides_FR.html)
 - [Voir la vidéo associée sur YouTube](les résultats des exercices seront là bientôt)
 
+### 200 ans de photographie: Discours à Paris, juin 2026
+
+Discours de The Anomaly à l'occasion du bicentenaire de la photographie (Invité par Zoom'art Magazine pour représenter les avancées technologiques et exposer des œuvres issues de la collection "Le photographe de l'hypothétique", International Art Gallery, Paris - Juin 2026)
+
+- [Lire le document .md](./200 ans de photographie discours-fr.md)
+
 ---
 
 ## 🇬🇧 Documents in English
@@ -60,6 +66,12 @@ Supporting slides for an in-person introduction to using ComfyUI with the Qwen I
 
 - [View the .html document](./Comfyui_Qwen_Image_2.1_Slides_EN.html)
 - Watch the accompanying video on YouTube — exercise results coming soon.
+
+### 200 years of photography: Speech in Paris, june 2026
+
+Speech by The Anomaly on the occasion of the bicentenary of photography (Invited by Zoom'art Magazine to represent technological advances and exhibit works from the collection "Le photographe de l'hypothétique", International Art Gallery, Paris - June 2026)
+
+- [Lire le document .md](./200 years of photography speech-en.md)
 
 ---
 
