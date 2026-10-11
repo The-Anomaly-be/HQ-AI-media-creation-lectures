@@ -38,7 +38,7 @@ Slides de support pour une introduction en présentiel à l'utilisation de Comfy
 
 Discours de The Anomaly à l'occasion du bicentenaire de la photographie (Invité par Zoom'art Magazine pour représenter les avancées technologiques et exposer des œuvres issues de la collection "Le photographe de l'hypothétique", International Art Gallery, Paris - Juin 2026)
 
-- [Lire le document .md](./200 ans de photographie discours-fr.md)
+- [Lire le document .md](./200_ans_de_photographie_discours-fr.md)
 
 ---
 
@@ -71,7 +71,7 @@ Supporting slides for an in-person introduction to using ComfyUI with the Qwen I
 
 Speech by The Anomaly on the occasion of the bicentenary of photography (Invited by Zoom'art Magazine to represent technological advances and exhibit works from the collection "Le photographe de l'hypothétique", International Art Gallery, Paris - June 2026)
 
-- [Lire le document .md](./200 years of photography speech-en.md)
+- [Lire le document .md](./200_years_of_photography_speech-en.md)
 
 ---
 
