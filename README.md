@@ -30,8 +30,13 @@ https://github.com/The-Anomaly-be/HQ-AI-media-creation-lectures/blob/main/Guide_
 
 ### Guide de prompting vidéo:
 
+Notes de cours:
+https://github.com/The-Anomaly-be/HQ-AI-media-creation-lectures/blob/main/Guide_Prompting_Video.md
 
+Slides:
+https://github.com/The-Anomaly-be/HQ-AI-media-creation-lectures/blob/main/Guide_Prompting_video_slides.html
 
+Outils:
 Constructeur de prompts (image et vidéo): https://theanomaly.be/promptgen.html
 
 ### Introduction technique à ComfyUI, modèle vidéo Minimax H3 (Slides)
