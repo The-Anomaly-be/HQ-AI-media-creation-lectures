@@ -20,6 +20,20 @@ Outils abordés : MiniMax Music 3, ACE-Step, YuE2, Suno, Udio, et autres.
 - [Lire le document .md](./Construire-un-prompt-musical-detaille-Minimax-Music-3-Suno-Udio.md)
 - [Voir la vidéo associée sur YouTube](https://youtu.be/e7BBaW4xp3I)
 
+### Guide de prompting image:
+
+Notes de cours:
+https://github.com/The-Anomaly-be/HQ-AI-media-creation-lectures/blob/main/Guide_prompting_image.md
+
+Slides:
+https://github.com/The-Anomaly-be/HQ-AI-media-creation-lectures/blob/main/Guide_prompting_image_slides.pdf
+
+### Guide de prompting vidéo:
+
+
+
+Constructeur de prompts (image et vidéo): https://theanomaly.be/promptgen.html
+
 ### Introduction technique à ComfyUI, modèle vidéo Minimax H3 (Slides)
 
 Slides de support pour une introduction en présentiel à l'utilisation de ComfyUI avec le modèle vidéo Minimax H3 (FL2VA, REF2VA) - pas un guide de prompting, celui-ci viendra plus tard.
