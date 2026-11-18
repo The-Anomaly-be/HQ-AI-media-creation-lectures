@@ -1,0 +1,1304 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guide de Formation : L'Art de Réaliser des Vidéos par l'IA</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #090a0f;
+            --card-dark: #12151f;
+            --amber-accent: #f59e0b;
+            --cyan-accent: #06b6d4;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-dark);
+            color: #f3f4f6;
+            overflow: hidden;
+        }
+        .font-cinzel { font-family: 'Cinzel', serif; }
+        .font-mono-code { font-family: 'JetBrains Mono', monospace; }
+
+        /* Animations personnalisées pour illustrer les mouvements de caméra et la vidéo */
+        @keyframes dollyIn {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.38); }
+        }
+        @keyframes panRight {
+            0%, 100% { transform: translateX(-18px); }
+            50% { transform: translateX(18px); }
+        }
+        @keyframes orbitCam {
+            0% { transform: rotate(0deg) translateX(28px) rotate(0deg); }
+            100% { transform: rotate(360deg) translateX(28px) rotate(-360deg); }
+        }
+        @keyframes craneUp {
+            0%, 100% { transform: translateY(14px) scale(0.95); }
+            50% { transform: translateY(-14px) scale(1.1); }
+        }
+        @keyframes dutchTilt {
+            0%, 100% { transform: rotate(0deg); }
+            50% { transform: rotate(-14deg); }
+        }
+        @keyframes railProgress {
+            0% { left: 8%; }
+            100% { left: 84%; }
+        }
+        @keyframes morphDrift {
+            0% { transform: translate(0, 0) scale(1); border-radius: 8px; background: #ef4444; }
+            33% { transform: translate(25px, -18px) scale(1.2, 0.7); border-radius: 50%; background: #a855f7; }
+            66% { transform: translate(-15px, 20px) scale(0.8, 1.3); border-radius: 20% 80% 30% 70%; background: #ec4899; }
+            100% { transform: translate(0, 0) scale(1); border-radius: 8px; background: #ef4444; }
+        }
+        @keyframes pulseRec {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.25; }
+        }
+
+        .anim-dolly { animation: dollyIn 3.5s ease-in-out infinite; }
+        .anim-pan { animation: panRight 3.5s ease-in-out infinite; }
+        .anim-orbit { animation: orbitCam 5s linear infinite; }
+        .anim-crane { animation: craneUp 3.5s ease-in-out infinite; }
+        .anim-dutch { animation: dutchTilt 3.5s ease-in-out infinite; }
+        .anim-rail { animation: railProgress 3.2s cubic-bezier(0.4, 0, 0.2, 1) infinite alternate; }
+        .anim-drift { animation: morphDrift 4s ease-in-out infinite; }
+        .anim-rec { animation: pulseRec 1.5s infinite; }
+
+        /* Cadre viseur de caméra */
+        .viewfinder-corner {
+            position: absolute;
+            width: 18px;
+            height: 18px;
+            border-color: rgba(245, 158, 11, 0.55);
+            pointer-events: none;
+        }
+
+        /* Mode Impression / Export PDF des slides */
+        @media print {
+            body {
+                overflow: visible !important;
+                background: #090a0f !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+            .no-print { display: none !important; }
+            #slides-wrapper {
+                height: auto !important;
+                overflow: visible !important;
+            }
+            .slide-item {
+                display: flex !important;
+                position: relative !important;
+                opacity: 1 !important;
+                page-break-after: always;
+                break-after: page;
+                height: 100vh !important;
+                width: 100vw !important;
+                border: none !important;
+            }
+        }
+    </style>
+</head>
+<body class="h-screen w-screen flex flex-col select-none">
+
+    <!-- BARRE DE NAVIGATION SUPÉRIEURE -->
+    <header class="no-print h-14 bg-[#0d1017] border-b border-slate-800/80 px-6 flex items-center justify-between z-30 shrink-0">
+        <div class="flex items-center gap-3">
+            <div class="flex items-center gap-2 bg-red-950/60 border border-red-500/40 px-2.5 py-1 rounded text-xs font-mono-code text-red-400">
+                <span class="w-2 h-2 rounded-full bg-red-500 anim-rec"></span>
+                REC 24FPS
+            </div>
+            <span class="text-slate-400 text-sm font-medium tracking-wide hidden sm:inline">FORMATION : L'ART DE LA VIDÉO PAR L'IA</span>
+        </div>
+
+        <div class="flex items-center gap-2">
+            <button onclick="toggleOverview()" class="px-3 py-1.5 rounded-lg bg-slate-800/90 hover:bg-slate-700 text-slate-200 text-xs font-medium flex items-center gap-1.5 border border-slate-700 transition">
+                <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
+                Grille des 14 Slides
+            </button>
+            <button onclick="window.print()" class="px-3 py-1.5 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 text-xs font-medium flex items-center gap-1.5 border border-amber-500/40 transition">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+                Exporter PDF / Imprimer
+            </button>
+        </div>
+    </header>
+
+    <!-- CONTENEUR PRINCIPAL DES SLIDES -->
+    <main id="slides-wrapper" class="flex-1 relative overflow-hidden flex items-center justify-center bg-[#090a0f]">
+
+        <!-- ==========================================
+             SLIDE 1 : TITRE & COUVERTURE
+        =========================================== -->
+        <section class="slide-item w-full h-full flex flex-col justify-center items-center px-12 relative overflow-hidden">
+            <!-- Fond lumineux subtil -->
+            <div class="absolute -top-32 -left-32 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl pointer-events-none"></div>
+            <div class="absolute -bottom-32 -right-32 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+            <!-- Coins viseur -->
+            <div class="viewfinder-corner top-8 left-8 border-t-2 border-l-2"></div>
+            <div class="viewfinder-corner top-8 right-8 border-t-2 border-r-2"></div>
+            <div class="viewfinder-corner bottom-8 left-8 border-b-2 border-l-2"></div>
+            <div class="viewfinder-corner bottom-8 right-8 border-b-2 border-r-2"></div>
+
+            <div class="max-w-5xl w-full grid grid-cols-1 lg:grid-cols-12 gap-10 items-center z-10">
+                <div class="lg:col-span-7 space-y-6 text-left">
+                    <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-semibold tracking-widest uppercase">
+                        Guide de Formation • Module 2
+                    </div>
+                    <h1 class="font-cinzel text-4xl sm:text-6xl font-extrabold leading-tight text-white">
+                        L'Art de Réaliser des <span class="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 via-orange-300 to-cyan-400">Vidéos par l'IA</span>
+                    </h1>
+                    <p class="text-lg sm:text-xl text-slate-300 font-light leading-relaxed">
+                        Passer du générateur de clips aléatoires au rôle de <strong class="text-white font-semibold">Réalisateur</strong> et <strong class="text-white font-semibold">Monteur Cinématographique</strong>.
+                    </p>
+                    <div class="pt-2 flex flex-wrap gap-3 text-xs text-slate-400 font-mono-code">
+                        <span class="px-3 py-1.5 rounded bg-slate-900 border border-slate-800">🎬 Découpage & Cadrage</span>
+                        <span class="px-3 py-1.5 rounded bg-slate-900 border border-slate-800">🎥 Mouvements Caméra</span>
+                        <span class="px-3 py-1.5 rounded bg-slate-900 border border-slate-800">🖼️ First & Last Frames</span>
+                        <span class="px-3 py-1.5 rounded bg-slate-900 border border-slate-800">⚡ Rythme & Transitions</span>
+                    </div>
+                </div>
+
+                <!-- Illustration Clap & Pellicule animée -->
+                <div class="lg:col-span-5 flex justify-center">
+                    <div class="w-full max-w-sm bg-slate-900/90 border border-slate-700/80 rounded-2xl p-6 shadow-2xl relative overflow-hidden">
+                        <!-- Bande supérieure Clap -->
+                        <div class="h-7 w-full rounded-t-lg mb-4 flex overflow-hidden border border-slate-700">
+                            <div class="flex-1 bg-amber-400 transform -skew-x-12"></div>
+                            <div class="flex-1 bg-slate-900 transform -skew-x-12"></div>
+                            <div class="flex-1 bg-amber-400 transform -skew-x-12"></div>
+                            <div class="flex-1 bg-slate-900 transform -skew-x-12"></div>
+                            <div class="flex-1 bg-amber-400 transform -skew-x-12"></div>
+                            <div class="flex-1 bg-slate-900 transform -skew-x-12"></div>
+                        </div>
+                        <div class="space-y-4">
+                            <div class="flex justify-between text-xs font-mono-code text-slate-400 border-b border-slate-800 pb-2">
+                                <span>PROD: AI STUDIO</span>
+                                <span class="text-amber-400">SCENE 01 / TAKE 01</span>
+                            </div>
+                            <!-- Visualisation First -> Last Frame -->
+                            <div class="bg-slate-950 rounded-xl p-4 border border-slate-800 relative h-36 flex items-center justify-between">
+                                <div class="text-center z-10">
+                                    <div class="w-14 h-16 rounded-lg bg-amber-500/20 border-2 border-amber-400 flex items-center justify-center text-xs font-bold text-amber-300 mx-auto">
+                                        FIRST<br>FRAME
+                                    </div>
+                                    <span class="text-[10px] font-mono-code text-slate-400 mt-1 block">t = 0.0s</span>
+                                </div>
+
+                                <div class="flex-1 mx-3 relative h-1 bg-slate-800 rounded">
+                                    <div class="absolute inset-0 bg-gradient-to-r from-amber-500 to-cyan-400 rounded"></div>
+                                    <div class="w-4 h-4 rounded-full bg-white shadow-lg shadow-cyan-500/50 absolute -top-1.5 anim-rail"></div>
+                                    <div class="text-[10px] font-mono-code text-cyan-300 text-center -mt-6">DOLLY IN + ACTION</div>
+                                </div>
+
+                                <div class="text-center z-10">
+                                    <div class="w-14 h-16 rounded-lg bg-cyan-500/20 border-2 border-cyan-400 flex items-center justify-center text-xs font-bold text-cyan-300 mx-auto">
+                                        LAST<br>FRAME
+                                    </div>
+                                    <span class="text-[10px] font-mono-code text-slate-400 mt-1 block">t = 4.0s</span>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-3 gap-2 text-center font-mono-code text-[11px]">
+                                <div class="bg-slate-950 p-2 rounded border border-slate-800 text-slate-300">LENS: <span class="text-amber-400">35mm</span></div>
+                                <div class="bg-slate-950 p-2 rounded border border-slate-800 text-slate-300">FPS: <span class="text-cyan-400">24 / 60</span></div>
+                                <div class="bg-slate-950 p-2 rounded border border-slate-800 text-slate-300">RATIO: <span class="text-emerald-400">16:9</span></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==========================================
+             SLIDE 2 : LE RÉFLEXE DU RÉALISATEUR
+        =========================================== -->
+        <section class="slide-item hidden w-full h-full flex-col justify-center items-center px-12 relative">
+            <div class="max-w-5xl w-full space-y-8">
+                <div class="text-center space-y-2">
+                    <span class="text-amber-400 font-mono-code text-xs uppercase tracking-widest">01 • Le Changement de Paradigme</span>
+                    <h2 class="font-cinzel text-3xl sm:text-5xl font-bold text-white">Le Réflexe Initial du Réalisateur</h2>
+                </div>
+
+                <!-- Grande Citation -->
+                <div class="bg-gradient-to-r from-amber-500/10 via-slate-900 to-cyan-500/10 border-l-4 border-amber-400 p-6 sm:p-8 rounded-r-2xl shadow-xl">
+                    <p class="text-xl sm:text-2xl font-light italic text-slate-100 leading-relaxed">
+                        « En vidéo IA, on ne génère <strong class="text-amber-400 font-semibold not-italic">jamais un film en un seul prompt</strong> : on tourne des plans de 3 à 5 secondes que l'on assemble. La première chose à faire n'est pas d'ouvrir le générateur vidéo, mais de créer son <strong class="text-cyan-400 font-semibold not-italic">Storyboard et ses Images Clés</strong>. »
+                    </p>
+                </div>
+
+                <!-- Comparaison Amateur vs Réalisateur -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="bg-red-950/20 border border-red-500/30 rounded-xl p-6 space-y-3">
+                        <div class="flex items-center justify-between">
+                            <span class="text-red-400 font-bold text-sm uppercase tracking-wider">❌ L'Erreur Classique (Text-to-Video Brut)</span>
+                            <span class="text-xs font-mono-code bg-red-500/20 text-red-300 px-2 py-0.5 rounded">Loterie</span>
+                        </div>
+                        <p class="text-sm text-slate-300">Taper une phrase racontant 3 actions d'affilée directement dans l'outil vidéo :</p>
+                        <ul class="text-xs text-slate-400 space-y-2 pt-1">
+                            <li>• <strong class="text-red-300">Au-delà de 4 secondes :</strong> L'IA perd la mémoire géométrique du sujet.</li>
+                            <li>• <strong class="text-red-300">Morphing & Hallucinations :</strong> Les visages fondent, les doigts se multiplient, l'épée fusionne avec le bras.</li>
+                            <li>• <strong class="text-red-300">Zéro continuité :</strong> Impossible de retrouver le même personnage au plan suivant.</li>
+                        </ul>
+                    </div>
+
+                    <div class="bg-emerald-950/20 border border-emerald-500/30 rounded-xl p-6 space-y-3">
+                        <div class="flex items-center justify-between">
+                            <span class="text-emerald-400 font-bold text-sm uppercase tracking-wider">✅ La Méthode Pro (Image-First + Montage)</span>
+                            <span class="text-xs font-mono-code bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded">Maîtrise 100%</span>
+                        </div>
+                        <p class="text-sm text-slate-300">Séparer la direction artistique (l'image) de la mise en mouvement (la vidéo) :</p>
+                        <ul class="text-xs text-slate-300 space-y-2 pt-1">
+                            <li>• <strong class="text-emerald-300">Étape 1 (Image) :</strong> On valide le décor, la lumière et le visage sur une image fixe parfaite (First Frame).</li>
+                            <li>• <strong class="text-emerald-300">Étape 2 (Clip 3-5s) :</strong> Le prompt vidéo ne dirige plus que <span class="underline">la caméra et une action simple</span>.</li>
+                            <li>• <strong class="text-emerald-300">Étape 3 (Montage) :</strong> On assemble 4 plans courts pour créer une scène de 15 secondes dynamique.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==========================================
+             SLIDE 3 : L'ANALOGIE DU MOUTON SUR DES RAILS
+        =========================================== -->
+        <section class="slide-item hidden w-full h-full flex-col justify-center items-center px-12 relative">
+            <div class="max-w-5xl w-full space-y-6">
+                <div class="text-center space-y-1">
+                    <span class="text-amber-400 font-mono-code text-xs uppercase tracking-widest">02 • Comprendre la Mécanique Temporelle</span>
+                    <h2 class="font-cinzel text-3xl sm:text-4xl font-bold text-white">Le Mouton de Minecraft… Lancé dans le Temps !</h2>
+                    <p class="text-sm text-slate-400">En image fixe, vous construisiez un enclos. En vidéo (24 images/seconde), vous devez <strong class="text-amber-300">poser des rails entre deux gares</strong>.</p>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 pt-2">
+                    <!-- Scénario 1 : Dérive Temporelle -->
+                    <div class="bg-slate-900/90 border border-red-500/40 rounded-2xl p-6 flex flex-col justify-between space-y-4">
+                        <div>
+                            <div class="flex items-center justify-between mb-2">
+                                <h3 class="font-bold text-red-400 text-lg">Scénario 1 : Le Mouton sans Rails</h3>
+                                <span class="text-xs font-mono-code text-red-300 bg-red-950 px-2.5 py-1 rounded">Dérive Temporelle</span>
+                            </div>
+                            <p class="text-xs text-slate-400">Prompt vague : <em>« Un guerrier marche dans la forêt et sort son épée. »</em> (Sans image de départ ni d'arrivée).</p>
+                        </div>
+
+                        <!-- Schéma animé de dérive -->
+                        <div class="h-44 bg-slate-950 rounded-xl border border-slate-800 relative flex items-center justify-center overflow-hidden p-4">
+                            <div class="absolute inset-2 border border-dashed border-red-500/30 rounded-lg flex items-end justify-between p-2 text-[10px] font-mono-code text-red-400/70">
+                                <span>ZONE D'HALLUCINATION</span>
+                                <span>MORPHING & FUSION D'OBJETS</span>
+                            </div>
+                            <div class="flex items-center gap-6 z-10">
+                                <div class="text-center">
+                                    <div class="w-12 h-12 rounded-lg bg-slate-800 border border-slate-600 flex items-center justify-center text-xl">🐑</div>
+                                    <span class="text-[10px] text-slate-400 font-mono-code">t = 0s</span>
+                                </div>
+                                <span class="text-red-500 font-mono-code text-xs">--- Dérive ---></span>
+                                <div class="text-center">
+                                    <div class="w-12 h-12 flex items-center justify-center text-xs font-bold text-white anim-drift">???</div>
+                                    <span class="text-[10px] text-red-400 font-mono-code mt-2 block">t = 4s (Mutant)</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="text-xs text-slate-300 bg-red-950/30 p-3 rounded-lg border border-red-500/20">
+                            <strong>Pourquoi ça rate ?</strong> À chaque seconde, l'IA réinvente la suite par probabilité. Au bout de 3 secondes, le visage, l'armure et le décor ont muté.
+                        </div>
+                    </div>
+
+                    <!-- Scénario 2 : Les Rails Temporels -->
+                    <div class="bg-slate-900/90 border border-amber-500/50 rounded-2xl p-6 flex flex-col justify-between space-y-4">
+                        <div>
+                            <div class="flex items-center justify-between mb-2">
+                                <h3 class="font-bold text-amber-400 text-lg">Scénario 2 : Le Wagonnet sur Rails</h3>
+                                <span class="text-xs font-mono-code text-amber-300 bg-amber-950 px-2.5 py-1 rounded">Trajectoire Verrouillée</span>
+                            </div>
+                            <p class="text-xs text-slate-400">Ancrage par <strong>First Frame</strong> + <strong>Last Frame</strong> + <strong>Vecteur de Caméra</strong>.</p>
+                        </div>
+
+                        <!-- Schéma animé des rails -->
+                        <div class="h-44 bg-slate-950 rounded-xl border border-slate-800 relative flex flex-col justify-center px-6 py-4">
+                            <div class="text-center text-[10px] font-mono-code text-cyan-400 mb-2 uppercase tracking-wider">
+                                ╔═══ Rail Supérieur : Mouvement de Caméra (Ex: Dolly In) ═══╗
+                            </div>
+                            <div class="relative flex items-center justify-between my-2">
+                                <div class="z-10 bg-amber-500/20 border-2 border-amber-400 rounded-lg p-2 text-center w-24">
+                                    <div class="text-lg">🐑</div>
+                                    <div class="text-[10px] font-bold text-amber-300 font-mono-code">FIRST FRAME</div>
+                                </div>
+
+                                <!-- Rail central -->
+                                <div class="flex-1 h-3 bg-slate-800 border-y border-amber-500/60 relative mx-2 flex items-center">
+                                    <div class="w-7 h-7 rounded-full bg-amber-400 text-slate-950 font-bold flex items-center justify-center text-xs shadow-lg shadow-amber-500/50 absolute anim-rail">
+                                        🎬
+                                    </div>
+                                </div>
+
+                                <div class="z-10 bg-cyan-500/20 border-2 border-cyan-400 rounded-lg p-2 text-center w-24">
+                                    <div class="text-lg">🐑</div>
+                                    <div class="text-[10px] font-bold text-cyan-300 font-mono-code">LAST FRAME</div>
+                                </div>
+                            </div>
+                            <div class="text-center text-[10px] font-mono-code text-amber-400 mt-2 uppercase tracking-wider">
+                                ╚═══ Rail Inférieur : 1 Action Unique + Physique (Vent/Pluie) ═══╝
+                            </div>
+                        </div>
+
+                        <div class="text-xs text-slate-300 bg-amber-950/30 p-3 rounded-lg border border-amber-500/20">
+                            <strong>Résultat :</strong> L'IA n'invente plus le style ni la fin. Elle calcule uniquement le mouvement fluide pour relier vos deux images parfaites !
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==========================================
+             SLIDE 4 : LA HIÉRARCHIE DE L'ATTENTION EN VIDÉO
+        =========================================== -->
+        <section class="slide-item hidden w-full h-full flex-col justify-center items-center px-12 relative">
+            <div class="max-w-5xl w-full space-y-8">
+                <div class="text-center space-y-2">
+                    <span class="text-amber-400 font-mono-code text-xs uppercase tracking-widest">03 • Le Poids des Mots</span>
+                    <h2 class="font-cinzel text-3xl sm:text-4xl font-bold text-white">La Hiérarchie de l'Attention en Vidéo</h2>
+                    <p class="text-sm text-slate-400">En mode <em>Image-to-Video</em>, l'IA <strong class="text-white">voit déjà</strong> votre image : ne gaspillez pas le début du prompt à re-décrire les vêtements !</p>
+                </div>
+
+                <!-- Flèche de poids dégressif -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+                    <div class="bg-gradient-to-b from-amber-500/20 to-slate-900 border-2 border-amber-400 rounded-2xl p-6 relative">
+                        <div class="flex justify-between items-center mb-3">
+                            <span class="px-2.5 py-1 rounded bg-amber-400 text-slate-950 font-mono-code font-bold text-xs">1. DÉBUT : POIDS MAX</span>
+                            <span class="text-2xl">🎥</span>
+                        </div>
+                        <h3 class="text-lg font-bold text-white mb-2">Vecteur Caméra & Action</h3>
+                        <p class="text-xs text-slate-300 leading-relaxed mb-4">
+                            Ouvrez immédiatement par le mouvement mécanique de la caméra et le verbe d'action unique du sujet principal.
+                        </p>
+                        <div class="bg-slate-950/90 p-3 rounded-lg border border-amber-500/30 font-mono-code text-[11px] text-amber-300">
+                            "Slow Dolly In camera movement. The detective slowly raises his head towards the lens..."
+                        </div>
+                    </div>
+
+                    <div class="bg-gradient-to-b from-cyan-500/15 to-slate-900 border border-cyan-400/60 rounded-2xl p-6 relative">
+                        <div class="flex justify-between items-center mb-3">
+                            <span class="px-2.5 py-1 rounded bg-cyan-400 text-slate-950 font-mono-code font-bold text-xs">2. MILIEU : POIDS MOYEN</span>
+                            <span class="text-2xl">🌬️</span>
+                        </div>
+                        <h3 class="text-lg font-bold text-white mb-2">Physique & Lumière Dynamique</h3>
+                        <p class="text-xs text-slate-300 leading-relaxed mb-4">
+                            Spécifiez les mouvements secondaires de l'environnement qui donnent vie au plan (vent, pluie, fumée, reflets).
+                        </p>
+                        <div class="bg-slate-950/90 p-3 rounded-lg border border-cyan-500/30 font-mono-code text-[11px] text-cyan-300">
+                            "...heavy rain falling diagonally, cigarette smoke rising in the warm desk lamp beam..."
+                        </div>
+                    </div>
+
+                    <div class="bg-gradient-to-b from-slate-700/25 to-slate-900 border border-slate-700 rounded-2xl p-6 relative">
+                        <div class="flex justify-between items-center mb-3">
+                            <span class="px-2.5 py-1 rounded bg-slate-300 text-slate-950 font-mono-code font-bold text-xs">3. FIN : POIDS FAIBLE</span>
+                            <span class="text-2xl">⏱️</span>
+                        </div>
+                        <h3 class="text-lg font-bold text-white mb-2">Cadence & Stabilité</h3>
+                        <p class="text-xs text-slate-300 leading-relaxed mb-4">
+                            Terminez par la vitesse temporelle (ralenti, temps réel), la profondeur de champ et le maintien des formes.
+                        </p>
+                        <div class="bg-slate-950/90 p-3 rounded-lg border border-slate-700 font-mono-code text-[11px] text-slate-300">
+                            "...smooth slow motion 60fps, shallow depth of field, consistent facial features."
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Les 3 Règles d'Or -->
+                <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+                    <div class="flex items-start gap-3">
+                        <span class="text-amber-400 font-bold text-base">①</span>
+                        <div><strong class="text-white">1 Clip = 1 Action simple :</strong> Pas de "il court, puis s'arrête, puis boit". Découpez en 3 plans !</div>
+                    </div>
+                    <div class="flex items-start gap-3">
+                        <span class="text-cyan-400 font-bold text-base">②</span>
+                        <div><strong class="text-white">Dissociez Caméra et Sujet :</strong> Dites clairement si c'est la caméra qui avance ou le sujet qui marche.</div>
+                    </div>
+                    <div class="flex items-start gap-3">
+                        <span class="text-emerald-400 font-bold text-base">③</span>
+                        <div><strong class="text-white">Formulations Positives :</strong> Au lieu de "sans bouger la tête", écrivez "tête immobile, regard fixe".</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==========================================
+             SLIDE 5 : LES MOUVEMENTS DE CAMÉRA (ILLUSTRÉS)
+        =========================================== -->
+        <section class="slide-item hidden w-full h-full flex-col justify-center items-center px-12 relative">
+            <div class="max-w-5xl w-full space-y-6">
+                <div class="text-center space-y-1">
+                    <span class="text-amber-400 font-mono-code text-xs uppercase tracking-widest">04 • Diriger la Caméra Virtuelle</span>
+                    <h2 class="font-cinzel text-3xl sm:text-4xl font-bold text-white">Les 6 Grands Mouvements de Caméra</h2>
+                    <p class="text-sm text-slate-400">Utilisez les termes anglais standards du cinéma pour déclencher des mouvements mécaniques précis.</p>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <!-- 1. Dolly In / Push In -->
+                    <div class="bg-slate-900/90 border border-slate-800 hover:border-amber-500/50 rounded-xl p-4 space-y-3 transition">
+                        <div class="h-28 bg-slate-950 rounded-lg border border-slate-800 flex items-center justify-center overflow-hidden relative">
+                            <div class="w-14 h-14 rounded-lg bg-amber-500/20 border-2 border-amber-400 flex items-center justify-center text-2xl anim-dolly">
+                                👤
+                            </div>
+                            <span class="absolute bottom-1.5 right-2 text-[10px] font-mono-code text-amber-400">Avance physique ➔</span>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-white text-sm">1. Dolly In / Push In</h3>
+                            <p class="text-xs text-slate-400 mt-0.5"><strong>Travelling avant :</strong> La caméra avance physiquement vers le sujet. Crée l'intimité, la tension ou une révélation.</p>
+                        </div>
+                    </div>
+
+                    <!-- 2. Pan & Tilt -->
+                    <div class="bg-slate-900/90 border border-slate-800 hover:border-cyan-500/50 rounded-xl p-4 space-y-3 transition">
+                        <div class="h-28 bg-slate-950 rounded-lg border border-slate-800 flex items-center justify-center overflow-hidden relative">
+                            <div class="w-24 h-12 rounded border-2 border-cyan-400 bg-cyan-500/10 flex items-center justify-center text-xs font-mono-code text-cyan-300 anim-pan">
+                                [ CADRE CAMÉRA ]
+                            </div>
+                            <span class="absolute bottom-1.5 right-2 text-[10px] font-mono-code text-cyan-400">Rotation sur axe ⟷</span>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-white text-sm">2. Pan (G/D) & Tilt (Haut/Bas)</h3>
+                            <p class="text-xs text-slate-400 mt-0.5"><strong>Panoramique :</strong> Le trépied reste fixe mais la caméra pivote pour balayer le décor ou dévoiler un géant.</p>
+                        </div>
+                    </div>
+
+                    <!-- 3. Truck / Tracking Shot -->
+                    <div class="bg-slate-900/90 border border-slate-800 hover:border-emerald-500/50 rounded-xl p-4 space-y-3 transition">
+                        <div class="h-28 bg-slate-950 rounded-lg border border-slate-800 flex flex-col items-center justify-center overflow-hidden relative gap-2">
+                            <div class="flex items-center gap-3 anim-pan">
+                                <span class="text-xl">🏃‍♂️</span>
+                                <span class="text-xs font-mono-code text-emerald-400">===➔</span>
+                                <span class="px-2 py-0.5 bg-emerald-500/20 border border-emerald-400 rounded text-[10px] text-emerald-300">🎥 Suivi</span>
+                            </div>
+                            <span class="absolute bottom-1.5 right-2 text-[10px] font-mono-code text-emerald-400">Rail parallèle ⇉</span>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-white text-sm">3. Tracking / Truck / Follow</h3>
+                            <p class="text-xs text-slate-400 mt-0.5"><strong>Travelling d'accompagnement :</strong> La caméra roule à côté, devant (<em>Lead</em>) ou derrière (<em>Follow</em>) le sujet en marche.</p>
+                        </div>
+                    </div>
+
+                    <!-- 4. Orbit / Arc 360 -->
+                    <div class="bg-slate-900/90 border border-slate-800 hover:border-purple-500/50 rounded-xl p-4 space-y-3 transition">
+                        <div class="h-28 bg-slate-950 rounded-lg border border-slate-800 flex items-center justify-center overflow-hidden relative">
+                            <div class="w-16 h-16 rounded-full border border-dashed border-purple-400/50 flex items-center justify-center relative">
+                                <span class="text-lg">🗿</span>
+                                <div class="w-4 h-4 rounded-full bg-purple-400 text-[9px] flex items-center justify-center text-slate-950 font-bold anim-orbit">🎥</div>
+                            </div>
+                            <span class="absolute bottom-1.5 right-2 text-[10px] font-mono-code text-purple-400">Cercle 180°/360° ↻</span>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-white text-sm">4. Orbit / Arc Shot</h3>
+                            <p class="text-xs text-slate-400 mt-0.5"><strong>Travelling circulaire :</strong> La caméra décrit un arc de cercle autour du sujet. Effet héroïque et spectaculaire.</p>
+                        </div>
+                    </div>
+
+                    <!-- 5. Crane Up / Jib -->
+                    <div class="bg-slate-900/90 border border-slate-800 hover:border-amber-500/50 rounded-xl p-4 space-y-3 transition">
+                        <div class="h-28 bg-slate-950 rounded-lg border border-slate-800 flex items-center justify-center overflow-hidden relative">
+                            <div class="px-3 py-1.5 rounded bg-amber-500/20 border border-amber-400 text-xs font-mono-code text-amber-300 anim-crane">
+                                🎥 ÉLÉVATION GRUE ↑
+                            </div>
+                            <span class="absolute bottom-1.5 right-2 text-[10px] font-mono-code text-amber-400">Axe vertical ↕</span>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-white text-sm">5. Crane Up / Pedestal</h3>
+                            <p class="text-xs text-slate-400 mt-0.5"><strong>Mouvement de grue :</strong> La caméra s'élève verticalement dans les airs pour révéler l'immensité de l'horizon.</p>
+                        </div>
+                    </div>
+
+                    <!-- 6. Handheld vs FPV vs Rack Focus -->
+                    <div class="bg-slate-900/90 border border-slate-800 hover:border-rose-500/50 rounded-xl p-4 space-y-3 transition">
+                        <div class="h-28 bg-slate-950 rounded-lg border border-slate-800 flex flex-col items-center justify-center p-2 gap-1.5 font-mono-code text-[11px]">
+                            <div class="w-full bg-slate-900 px-2.5 py-1 rounded border border-slate-700 text-rose-300">• Handheld Camera (Épaule)</div>
+                            <div class="w-full bg-slate-900 px-2.5 py-1 rounded border border-slate-700 text-cyan-300">• FPV Drone Shot (Acrobatique)</div>
+                            <div class="w-full bg-slate-900 px-2.5 py-1 rounded border border-slate-700 text-emerald-300">• Rack Focus (Bascule net/flou)</div>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-white text-sm">6. Styles Spéciaux & Focus</h3>
+                            <p class="text-xs text-slate-400 mt-0.5">Du tremblement organique documentaire (<em>Handheld</em>) à la bascule de mise au point (<em>Rack Focus</em>).</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==========================================
+             SLIDE 6 : CADRAGE, ÉCHELLE DE PLANS & ANGLES
+        =========================================== -->
+        <section class="slide-item hidden w-full h-full flex-col justify-center items-center px-12 relative">
+            <div class="max-w-5xl w-full space-y-6">
+                <div class="text-center space-y-1">
+                    <span class="text-amber-400 font-mono-code text-xs uppercase tracking-widest">05 • Géométrie Spatiale</span>
+                    <h2 class="font-cinzel text-3xl sm:text-4xl font-bold text-white">Cadrage Dynamique, Échelle de Plans & Angles</h2>
+                    <p class="text-sm text-slate-400">Chaque taille de plan et chaque angle de caméra porte une fonction psychologique précise.</p>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+                    <!-- Schéma des 4 tailles de plans clés en vidéo -->
+                    <div class="lg:col-span-7 bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4">
+                        <h3 class="font-bold text-amber-400 text-sm uppercase tracking-wider">Échelle de Plans pour le Découpage</h3>
+                        
+                        <!-- Visualisation imbriquée des cadres -->
+                        <div class="relative h-56 bg-slate-950 rounded-xl border-2 border-slate-700 p-3 flex items-center justify-center">
+                            <span class="absolute top-2 left-3 text-[10px] font-mono-code text-slate-400">1. EXTREME WIDE SHOT (Plan Général - Le Lieu)</span>
+                            
+                            <div class="w-4/5 h-4/5 border-2 border-cyan-500/60 rounded-lg relative flex items-center justify-center bg-cyan-950/10">
+                                <span class="absolute top-1.5 left-2.5 text-[10px] font-mono-code text-cyan-400">2. MEDIUM SHOT (Plan Taille - L'Action)</span>
+                                
+                                <div class="w-3/5 h-3/5 border-2 border-amber-500/80 rounded-lg relative flex items-center justify-center bg-amber-950/20">
+                                    <span class="absolute top-1 left-2 text-[10px] font-mono-code text-amber-300">3. CLOSE-UP (L'Émotion)</span>
+                                    
+                                    <div class="px-3 py-1 border border-rose-400 bg-rose-500/20 rounded text-[10px] font-mono-code text-rose-300 font-bold">
+                                        4. ECU / INSERT (Le Détail)
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-slate-950 p-3 rounded-lg border border-slate-800 flex items-center justify-between text-xs">
+                            <span class="text-amber-300 font-semibold">💡 Règle du "Lead Room" (Espace de déplacement) :</span>
+                            <span class="text-slate-400">Laissez toujours de l'espace vide <strong class="text-white">devant</strong> un sujet qui marche ou regarde de côté !</span>
+                        </div>
+                    </div>
+
+                    <!-- Les Angles de Caméra -->
+                    <div class="lg:col-span-5 bg-slate-900 border border-slate-800 rounded-2xl p-5 flex flex-col justify-between space-y-3">
+                        <h3 class="font-bold text-cyan-400 text-sm uppercase tracking-wider">Angles & Psychologie</h3>
+                        
+                        <div class="space-y-2.5 text-xs">
+                            <div class="p-3 rounded-lg bg-slate-950 border border-slate-800 flex justify-between items-center">
+                                <div>
+                                    <strong class="text-white block">Low Angle (Contre-plongée)</strong>
+                                    <span class="text-slate-400">Caméra basse qui regarde vers le haut.</span>
+                                </div>
+                                <span class="px-2 py-1 rounded bg-amber-500/20 text-amber-300 font-mono-code text-[10px]">Héroïque / Puissant</span>
+                            </div>
+
+                            <div class="p-3 rounded-lg bg-slate-950 border border-slate-800 flex justify-between items-center">
+                                <div>
+                                    <strong class="text-white block">High Angle (Plongée)</strong>
+                                    <span class="text-slate-400">Caméra haute qui écrase le sujet.</span>
+                                </div>
+                                <span class="px-2 py-1 rounded bg-cyan-500/20 text-cyan-300 font-mono-code text-[10px]">Vulnérable / Isolé</span>
+                            </div>
+
+                            <div class="p-3 rounded-lg bg-slate-950 border border-slate-800 flex justify-between items-center">
+                                <div>
+                                    <strong class="text-white block">Overhead / Bird's-Eye (90°)</strong>
+                                    <span class="text-slate-400">Vue verticale zénithale façon drone.</span>
+                                </div>
+                                <span class="px-2 py-1 rounded bg-emerald-500/20 text-emerald-300 font-mono-code text-[10px]">Géométrique / Dieu</span>
+                            </div>
+
+                            <div class="p-3 rounded-lg bg-slate-950 border border-slate-800 flex justify-between items-center">
+                                <div>
+                                    <strong class="text-white block">Dutch Angle (Incliné)</strong>
+                                    <span class="text-slate-400">Horizon penché sur le côté.</span>
+                                </div>
+                                <span class="px-2 py-1 rounded bg-rose-500/20 text-rose-300 font-mono-code text-[10px] anim-dutch">Tension / Vertige</span>
+                            </div>
+
+                            <div class="p-3 rounded-lg bg-slate-950 border border-slate-800 flex justify-between items-center">
+                                <div>
+                                    <strong class="text-white block">Over-the-Shoulder (OTS) & POV</strong>
+                                    <span class="text-slate-400">Par-dessus l'épaule ou vue subjective.</span>
+                                </div>
+                                <span class="px-2 py-1 rounded bg-purple-500/20 text-purple-300 font-mono-code text-[10px]">Immersion Totale</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==========================================
+             SLIDE 7 : LE DÉCOUPAGE EN PLANS (SHOT BREAKDOWN)
+        =========================================== -->
+        <section class="slide-item hidden w-full h-full flex-col justify-center items-center px-12 relative">
+            <div class="max-w-5xl w-full space-y-7">
+                <div class="text-center space-y-1">
+                    <span class="text-amber-400 font-mono-code text-xs uppercase tracking-widest">06 • L'Architecture d'une Scène</span>
+                    <h2 class="font-cinzel text-3xl sm:text-4xl font-bold text-white">Le Découpage en 5 Plans (Shot Breakdown)</h2>
+                    <p class="text-sm text-slate-400">Pour raconter une scène de 15 secondes sans aucune hallucination IA, tournez <strong class="text-white">5 plans complémentaires de 3 secondes</strong>.</p>
+                </div>
+
+                <!-- Timeline Séquentielle en 5 cartes -->
+                <div class="grid grid-cols-1 sm:grid-cols-5 gap-3">
+                    <!-- Plan 1 -->
+                    <div class="bg-slate-900 border-t-4 border-amber-400 rounded-xl p-4 flex flex-col justify-between space-y-3">
+                        <div>
+                            <div class="flex justify-between text-[10px] font-mono-code text-amber-400 mb-1">
+                                <span>PLAN 01</span>
+                                <span>0.0s - 3.5s</span>
+                            </div>
+                            <h4 class="font-bold text-white text-sm">Establishing Shot</h4>
+                            <span class="text-[11px] text-slate-400 block mb-2">Plan Général</span>
+                            <div class="h-20 bg-slate-950 rounded border border-slate-800 flex items-center justify-center text-2xl">
+                                🏔️🚶
+                            </div>
+                        </div>
+                        <p class="text-[11px] text-slate-300">Pose le décor, la météo et l'échelle. Mouvement : <em>Crane Down</em> lent.</p>
+                    </div>
+
+                    <!-- Plan 2 -->
+                    <div class="bg-slate-900 border-t-4 border-cyan-400 rounded-xl p-4 flex flex-col justify-between space-y-3">
+                        <div>
+                            <div class="flex justify-between text-[10px] font-mono-code text-cyan-400 mb-1">
+                                <span>PLAN 02</span>
+                                <span>3.5s - 6.5s</span>
+                            </div>
+                            <h4 class="font-bold text-white text-sm">Tracking Action</h4>
+                            <span class="text-[11px] text-slate-400 block mb-2">Plan Moyen Suivi</span>
+                            <div class="h-20 bg-slate-950 rounded border border-slate-800 flex items-center justify-center text-2xl">
+                                🔦🕵️‍♀️
+                            </div>
+                        </div>
+                        <p class="text-[11px] text-slate-300">Accompagne le héros qui avance. Mouvement : <em>Lead Tracking Shot</em>.</p>
+                    </div>
+
+                    <!-- Plan 3 -->
+                    <div class="bg-slate-900 border-t-4 border-emerald-400 rounded-xl p-4 flex flex-col justify-between space-y-3">
+                        <div>
+                            <div class="flex justify-between text-[10px] font-mono-code text-emerald-400 mb-1">
+                                <span>PLAN 03</span>
+                                <span>6.5s - 8.5s</span>
+                            </div>
+                            <h4 class="font-bold text-white text-sm">Insert / Cutaway</h4>
+                            <span class="text-[11px] text-slate-400 block mb-2">Très Gros Plan</span>
+                            <div class="h-20 bg-slate-950 rounded border border-slate-800 flex items-center justify-center text-2xl">
+                                🖐️🗝️
+                            </div>
+                        </div>
+                        <p class="text-[11px] text-slate-300">Focus macro sur un détail clé (main, objet). <strong>Arme secrète de raccord !</strong></p>
+                    </div>
+
+                    <!-- Plan 4 -->
+                    <div class="bg-slate-900 border-t-4 border-rose-400 rounded-xl p-4 flex flex-col justify-between space-y-3">
+                        <div>
+                            <div class="flex justify-between text-[10px] font-mono-code text-rose-400 mb-1">
+                                <span>PLAN 04</span>
+                                <span>8.5s - 11.5s</span>
+                            </div>
+                            <h4 class="font-bold text-white text-sm">Reaction Shot</h4>
+                            <span class="text-[11px] text-slate-400 block mb-2">Gros Plan Visage</span>
+                            <div class="h-20 bg-slate-950 rounded border border-slate-800 flex items-center justify-center text-2xl">
+                                👁️✨
+                            </div>
+                        </div>
+                        <p class="text-[11px] text-slate-300">Capte l'émotion pure du personnage. Mouvement : <em>Slow Push In</em>.</p>
+                    </div>
+
+                    <!-- Plan 5 -->
+                    <div class="bg-slate-900 border-t-4 border-purple-400 rounded-xl p-4 flex flex-col justify-between space-y-3">
+                        <div>
+                            <div class="flex justify-between text-[10px] font-mono-code text-purple-400 mb-1">
+                                <span>PLAN 05</span>
+                                <span>11.5s - 15.0s</span>
+                            </div>
+                            <h4 class="font-bold text-white text-sm">Payoff / Reveal</h4>
+                            <span class="text-[11px] text-slate-400 block mb-2">Contre-Plongée</span>
+                            <div class="h-20 bg-slate-950 rounded border border-slate-800 flex items-center justify-center text-2xl">
+                                ⛩️⚡
+                            </div>
+                        </div>
+                        <p class="text-[11px] text-slate-300">Révélation finale spectaculaire. Mouvement : <em>Dolly Out</em> ample.</p>
+                    </div>
+                </div>
+
+                <div class="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4 text-xs text-slate-200 flex items-center gap-3">
+                    <span class="text-xl">🎯</span>
+                    <div>
+                        <strong class="text-amber-300">Astuce Montage IA :</strong> Vous avez un léger faux raccord de posture entre deux plans de votre personnage ? Insérez un <strong>Plan d'Insert de 2 secondes</strong> (ses mains, un objet, l'environnement) entre les deux : le cerveau du spectateur reconstruira une continuité parfaite !
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==========================================
+             SLIDE 8 : LE RYTHME ET LES TRANSITIONS
+        =========================================== -->
+        <section class="slide-item hidden w-full h-full flex-col justify-center items-center px-12 relative">
+            <div class="max-w-5xl w-full space-y-6">
+                <div class="text-center space-y-1">
+                    <span class="text-amber-400 font-mono-code text-xs uppercase tracking-widest">07 • Montage & Temporalité</span>
+                    <h2 class="font-cinzel text-3xl sm:text-4xl font-bold text-white">Maîtriser le Rythme et les Transitions</h2>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <!-- Colonne Rythme -->
+                    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4">
+                        <h3 class="font-bold text-amber-400 text-base flex items-center gap-2">
+                            <span>⏱️</span> 1. Le Rythme Interne & Externe (Pacing)
+                        </h3>
+
+                        <div class="space-y-3 text-xs">
+                            <div class="p-3 bg-slate-950 rounded-lg border border-slate-800">
+                                <strong class="text-cyan-300 block mb-1">A. Le Ralenti IA (Slow Motion 60fps / 1000fps)</strong>
+                                <p class="text-slate-400">Secret technique : demander du <em>Slow Motion</em> à l'IA réduit drastiquement les artefacts visuels et donne instantanément une gravité cinématographique aux particules (pluie, braises, cheveux).</p>
+                            </div>
+
+                            <div class="p-3 bg-slate-950 rounded-lg border border-slate-800 space-y-2">
+                                <strong class="text-amber-300 block">B. La Courbe de Montage (Durée des clips)</strong>
+                                <!-- Barre visuelle Rythme Lent -->
+                                <div>
+                                    <span class="text-[10px] font-mono-code text-slate-400">Contemplatif (Plans longs 4-5s) :</span>
+                                    <div class="grid grid-cols-2 gap-1 mt-1">
+                                        <div class="h-5 bg-cyan-500/30 border border-cyan-400 rounded text-[10px] flex items-center justify-center font-mono-code">PLAN A (4.5s)</div>
+                                        <div class="h-5 bg-cyan-500/30 border border-cyan-400 rounded text-[10px] flex items-center justify-center font-mono-code">PLAN B (4.5s)</div>
+                                    </div>
+                                </div>
+                                <!-- Barre visuelle Crescendo Action -->
+                                <div>
+                                    <span class="text-[10px] font-mono-code text-slate-400">Crescendo Tension (Accélération vers l'impact) :</span>
+                                    <div class="flex gap-1 mt-1">
+                                        <div class="w-5/12 h-5 bg-amber-500/30 border border-amber-400 rounded text-[10px] flex items-center justify-center font-mono-code">3.0s</div>
+                                        <div class="w-3/12 h-5 bg-orange-500/30 border border-orange-400 rounded text-[10px] flex items-center justify-center font-mono-code">1.8s</div>
+                                        <div class="w-2/12 h-5 bg-red-500/40 border border-red-400 rounded text-[10px] flex items-center justify-center font-mono-code">1.0s</div>
+                                        <div class="w-1/12 h-5 bg-red-500 border border-white rounded text-[9px] flex items-center justify-center font-mono-code font-bold text-slate-950">0.5</div>
+                                        <div class="w-1/12 h-5 bg-red-500 border border-white rounded text-[9px] flex items-center justify-center font-mono-code font-bold text-slate-950">0.5</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Colonne Transitions -->
+                    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4">
+                        <h3 class="font-bold text-cyan-400 text-base flex items-center gap-2">
+                            <span>✂️</span> 2. Les 5 Transitions Cinématographiques
+                        </h3>
+
+                        <div class="space-y-2.5 text-xs">
+                            <div class="p-2.5 bg-slate-950 rounded-lg border border-slate-800">
+                                <strong class="text-white">1. Cut on Action (Coupe dans le mouvement) :</strong>
+                                <span class="text-slate-400 block">Coupez au milieu d'un geste (ex: ouvrir une porte) et reprenez le plan suivant au milieu de ce même geste.</span>
+                            </div>
+                            <div class="p-2.5 bg-slate-950 rounded-lg border border-slate-800">
+                                <strong class="text-amber-300">2. Match Cut (Raccord de forme ou de geste) :</strong>
+                                <span class="text-slate-400 block">Une roue qui tourne en gros plan ➔ coupe sur une horloge ronde de la même taille au même endroit du cadre.</span>
+                            </div>
+                            <div class="p-2.5 bg-slate-950 rounded-lg border border-slate-800">
+                                <strong class="text-cyan-300">3. Whip Pan & Obstacle Wipe (Volet naturel) :</strong>
+                                <span class="text-slate-400 block">Un mouvement de caméra filé rapide ou une silhouette sombre qui passe devant l'objectif pour masquer la coupe.</span>
+                            </div>
+                            <div class="p-2.5 bg-emerald-950/30 rounded-lg border border-emerald-500/40">
+                                <strong class="text-emerald-300">4. J-Cut & L-Cut (Le liant sonore indispensable) :</strong>
+                                <span class="text-slate-300 block">Faites déborder l'ambiance sonore ou la voix du Plan B d'une seconde sur la fin du Plan A. Cela efface l'effet "clips séparés" !</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==========================================
+             SLIDE 9 : TECHNIQUES IA AVANCÉES (FIRST/LAST FRAME & COHÉRENCE)
+        =========================================== -->
+        <section class="slide-item hidden w-full h-full flex-col justify-center items-center px-12 relative">
+            <div class="max-w-5xl w-full space-y-6">
+                <div class="text-center space-y-1">
+                    <span class="text-amber-400 font-mono-code text-xs uppercase tracking-widest">08 • Secrets de Production IA</span>
+                    <h2 class="font-cinzel text-3xl sm:text-4xl font-bold text-white">First Frame, Last Frame & Cohérence des Personnages</h2>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+                    <!-- Astuce 1 : Le Couple First + Last Frame -->
+                    <div class="bg-slate-900 border border-amber-500/40 rounded-2xl p-5 flex flex-col justify-between space-y-4">
+                        <div class="space-y-2">
+                            <span class="px-2.5 py-1 rounded bg-amber-500/20 text-amber-300 font-mono-code text-xs font-bold">TECHNIQUE 01</span>
+                            <h3 class="text-lg font-bold text-white">Le Pont First ➔ Last Frame</h3>
+                            <p class="text-xs text-slate-300 leading-relaxed">
+                                Comment obtenir une <strong>Last Frame</strong> qui a exactement le même décor que votre <strong>First Frame</strong> ?
+                            </p>
+                        </div>
+
+                        <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-800 space-y-2 text-xs font-mono-code">
+                            <div class="text-amber-300">1. Créez la First Frame</div>
+                            <div class="text-slate-500 text-[10px]">(Ex: Coffre fermé sur la table)</div>
+                            <div class="text-cyan-300">2. Éditez cette image par IA</div>
+                            <div class="text-slate-500 text-[10px]">("Garde tout identique mais ouvre le coffre avec une lueur d'or")</div>
+                            <div class="text-emerald-300">3. Chargez A + B en Vidéo</div>
+                            <div class="text-slate-400 text-[10px]">L'IA génère l'ouverture parfaite !</div>
+                        </div>
+                    </div>
+
+                    <!-- Astuce 2 : Daisy-Chaining (Chaînage) -->
+                    <div class="bg-slate-900 border border-cyan-500/40 rounded-2xl p-5 flex flex-col justify-between space-y-4">
+                        <div class="space-y-2">
+                            <span class="px-2.5 py-1 rounded bg-cyan-500/20 text-cyan-300 font-mono-code text-xs font-bold">TECHNIQUE 02</span>
+                            <h3 class="text-lg font-bold text-white">Chaîner les Clips (Daisy-Chain)</h3>
+                            <p class="text-xs text-slate-300 leading-relaxed">
+                                Comment créer un plan-séquence continu de 10 ou 15 secondes sans dégradation ?
+                            </p>
+                        </div>
+
+                        <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-800 space-y-2.5 text-xs">
+                            <div class="flex items-center justify-between bg-slate-900 p-2 rounded border border-slate-700 font-mono-code text-[11px]">
+                                <span>Clip 1 (0-4s)</span>
+                                <span class="text-amber-400">[Frame Finale 📸]</span>
+                            </div>
+                            <div class="text-center text-cyan-400 font-mono-code text-xs">⬇ Devient la First Frame ⬇</div>
+                            <div class="flex items-center justify-between bg-slate-900 p-2 rounded border border-cyan-500/50 font-mono-code text-[11px]">
+                                <span class="text-cyan-300">[First Frame]</span>
+                                <span>Clip 2 (4-8s)</span>
+                            </div>
+                            <p class="text-[11px] text-slate-400 pt-1">Permet de changer d'instruction de caméra à la seconde 4 tout en gardant un raccord invisible.</p>
+                        </div>
+                    </div>
+
+                    <!-- Astuce 3 : Character Sheet & Références -->
+                    <div class="bg-slate-900 border border-emerald-500/40 rounded-2xl p-5 flex flex-col justify-between space-y-4">
+                        <div class="space-y-2">
+                            <span class="px-2.5 py-1 rounded bg-emerald-500/20 text-emerald-300 font-mono-code text-xs font-bold">TECHNIQUE 03</span>
+                            <h3 class="text-lg font-bold text-white">La Character Sheet</h3>
+                            <p class="text-xs text-slate-300 leading-relaxed">
+                                Pour garder exactement le même acteur sous tous les angles de votre court-métrage :
+                            </p>
+                        </div>
+
+                        <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-800 space-y-2 text-xs">
+                            <div class="grid grid-cols-3 gap-1.5 text-center font-mono-code text-[10px]">
+                                <div class="bg-slate-900 p-2 rounded border border-slate-700">😊<br>FACE</div>
+                                <div class="bg-slate-900 p-2 rounded border border-slate-700">🚶<br>PROFIL</div>
+                                <div class="bg-slate-900 p-2 rounded border border-slate-700">🧥<br>DOS</div>
+                            </div>
+                            <p class="text-[11px] text-slate-300 pt-1">
+                                Générer une <strong>planche de référence</strong> unique avant le tournage et la fournir comme <em>Character Reference / Elements</em> pour créer chaque First Frame.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==========================================
+             SLIDE 10 : LES 8 BARRIÈRES DE LA VIDÉO (APERÇU)
+        =========================================== -->
+        <section class="slide-item hidden w-full h-full flex-col justify-center items-center px-12 relative">
+            <div class="max-w-5xl w-full space-y-6">
+                <div class="text-center space-y-1">
+                    <span class="text-amber-400 font-mono-code text-xs uppercase tracking-widest">09 • L'Enclos Temporel Complet</span>
+                    <h2 class="font-cinzel text-3xl sm:text-4xl font-bold text-white">Les 8 Barrières d'un Plan Vidéo Maîtrisé</h2>
+                    <p class="text-sm text-slate-400">Chaque barrière verrouille une dimension spatiale ou temporelle autour de votre séquence.</p>
+                </div>
+
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                    <div class="bg-slate-900 border border-amber-500/40 rounded-xl p-4 space-y-1.5">
+                        <span class="text-[10px] font-mono-code text-amber-400 font-bold">BARRIÈRE 01</span>
+                        <h4 class="font-bold text-white text-sm">Ancrages Visuels</h4>
+                        <p class="text-xs text-slate-400">First Frame, Last Frame, référence personnage et maintien du médium.</p>
+                    </div>
+                    <div class="bg-slate-900 border border-amber-500/40 rounded-xl p-4 space-y-1.5">
+                        <span class="text-[10px] font-mono-code text-amber-400 font-bold">BARRIÈRE 02</span>
+                        <h4 class="font-bold text-white text-sm">Mouvement Caméra</h4>
+                        <p class="text-xs text-slate-400">Dolly, Pan, Tilt, Orbit, Tracking, Grue ou Fixe sur trépied.</p>
+                    </div>
+                    <div class="bg-slate-900 border border-amber-500/40 rounded-xl p-4 space-y-1.5">
+                        <span class="text-[10px] font-mono-code text-amber-400 font-bold">BARRIÈRE 03</span>
+                        <h4 class="font-bold text-white text-sm">Action Unique Sujet</h4>
+                        <p class="text-xs text-slate-400">Le geste simple, le déplacement et la micro-expression faciale.</p>
+                    </div>
+                    <div class="bg-slate-900 border border-amber-500/40 rounded-xl p-4 space-y-1.5">
+                        <span class="text-[10px] font-mono-code text-amber-400 font-bold">BARRIÈRE 04</span>
+                        <h4 class="font-bold text-white text-sm">Évolution du Plan</h4>
+                        <p class="text-xs text-slate-400">Passage d'un plan moyen à un gros plan, angle, bascule de point.</p>
+                    </div>
+                    <div class="bg-slate-900 border border-cyan-500/40 rounded-xl p-4 space-y-1.5">
+                        <span class="text-[10px] font-mono-code text-cyan-400 font-bold">BARRIÈRE 05</span>
+                        <h4 class="font-bold text-white text-sm">Physique & Décor</h4>
+                        <p class="text-xs text-slate-400">Direction du vent dans les tissus, pluie, fumée, eau, poussières.</p>
+                    </div>
+                    <div class="bg-slate-900 border border-cyan-500/40 rounded-xl p-4 space-y-1.5">
+                        <span class="text-[10px] font-mono-code text-cyan-400 font-bold">BARRIÈRE 06</span>
+                        <h4 class="font-bold text-white text-sm">Lumière Dynamique</h4>
+                        <p class="text-xs text-slate-400">Ombres qui glissent, éclairs, néon qui grésille, phares en mouvement.</p>
+                    </div>
+                    <div class="bg-slate-900 border border-cyan-500/40 rounded-xl p-4 space-y-1.5">
+                        <span class="text-[10px] font-mono-code text-cyan-400 font-bold">BARRIÈRE 07</span>
+                        <h4 class="font-bold text-white text-sm">Rythme & Vitesse</h4>
+                        <p class="text-xs text-slate-400">Slow motion 60/1000fps, vitesse réelle 24fps, Hyperlapse, Motion blur.</p>
+                    </div>
+                    <div class="bg-slate-900 border border-cyan-500/40 rounded-xl p-4 space-y-1.5">
+                        <span class="text-[10px] font-mono-code text-cyan-400 font-bold">BARRIÈRE 08</span>
+                        <h4 class="font-bold text-white text-sm">Stabilité & Rigueur</h4>
+                        <p class="text-xs text-slate-400">Anatomie verrouillée, objets rigides, zéro morphing temporel.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==========================================
+             SLIDE 11 : LA CHECKLIST DE GÉNÉRATION VIDÉO
+        =========================================== -->
+        <section class="slide-item hidden w-full h-full flex-col justify-center items-center px-12 relative">
+            <div class="max-w-5xl w-full space-y-5">
+                <div class="text-center space-y-1">
+                    <span class="text-amber-400 font-mono-code text-xs uppercase tracking-widest">10 • L'Outil Prêt à Copier-Coller</span>
+                    <h2 class="font-cinzel text-3xl sm:text-4xl font-bold text-white">La Checklist de Réalisation Vidéo</h2>
+                    <p class="text-sm text-slate-400">Joignez votre <strong>First Frame</strong> (et <strong>Last Frame</strong>) et envoyez directement cette fiche structurée :</p>
+                </div>
+
+                <div class="bg-slate-900 border border-slate-700 rounded-2xl overflow-hidden shadow-2xl">
+                    <table class="w-full text-left border-collapse text-xs">
+                        <thead>
+                            <tr class="bg-slate-950 border-b border-slate-800 text-amber-400 font-mono-code uppercase">
+                                <th class="py-3 px-4 w-2/5">Catégorie de la Checklist (Ordre d'Attention)</th>
+                                <th class="py-3 px-4">Rôle de la Barrière Temporelle</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-800/80">
+                            <tr class="hover:bg-slate-800/40">
+                                <td class="py-2.5 px-4 font-mono-code font-semibold text-amber-300">1. [ANCRAGES VISUELS]</td>
+                                <td class="py-2.5 px-4 text-slate-300">Lien First Frame ➔ Last Frame, maintien du style 35mm/3D de l'image source</td>
+                            </tr>
+                            <tr class="hover:bg-slate-800/40">
+                                <td class="py-2.5 px-4 font-mono-code font-semibold text-amber-300">2. [MOUVEMENT DE CAMÉRA]</td>
+                                <td class="py-2.5 px-4 text-slate-300">Direction, vitesse et mécanisme (Dolly In lent, Pan, Tracking, Fixe trépied)</td>
+                            </tr>
+                            <tr class="hover:bg-slate-800/40">
+                                <td class="py-2.5 px-4 font-mono-code font-semibold text-amber-300">3. [ACTION UNIQUE DU SUJET]</td>
+                                <td class="py-2.5 px-4 text-slate-300">Un seul geste clair, trajectoire dans le cadre, micro-expression et regard</td>
+                            </tr>
+                            <tr class="hover:bg-slate-800/40">
+                                <td class="py-2.5 px-4 font-mono-code font-semibold text-cyan-300">4. [CADRAGE & ÉVOLUTION DU PLAN]</td>
+                                <td class="py-2.5 px-4 text-slate-300">Échelle de départ et d'arrivée, angle (Contre-plongée), bascule de point (Rack focus)</td>
+                            </tr>
+                            <tr class="hover:bg-slate-800/40">
+                                <td class="py-2.5 px-4 font-mono-code font-semibold text-cyan-300">5. [PHYSIQUE & DYNAMIQUE DU DÉCOR]</td>
+                                <td class="py-2.5 px-4 text-slate-300">Mouvements secondaires : vent dans les vêtements, pluie, fumée, eau, débris</td>
+                            </tr>
+                            <tr class="hover:bg-slate-800/40">
+                                <td class="py-2.5 px-4 font-mono-code font-semibold text-cyan-300">6. [ÉCLAIRAGE DYNAMIQUE]</td>
+                                <td class="py-2.5 px-4 text-slate-300">Variation lumineuse : reflets sur métal, gyrophare, éclair d'orage, rayons mobiles</td>
+                            </tr>
+                            <tr class="hover:bg-slate-800/40">
+                                <td class="py-2.5 px-4 font-mono-code font-semibold text-slate-300">7. [RYTHME & TEMPORALITÉ]</td>
+                                <td class="py-2.5 px-4 text-slate-300">Cadence (Slow motion 60fps, Ultra slow-mo 1000fps, Temps réel 24fps), Motion blur</td>
+                            </tr>
+                            <tr class="hover:bg-slate-800/40">
+                                <td class="py-2.5 px-4 font-mono-code font-semibold text-slate-300">8. [STABILITÉ & EXCLUSIONS]</td>
+                                <td class="py-2.5 px-4 text-slate-300">Constance anatomique du visage et des mains, rigidité des objets, zéro morphing</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==========================================
+             SLIDE 12 : ÉTUDE DE CAS (DE L'ÉCHEC À LA MAÎTRISE)
+        =========================================== -->
+        <section class="slide-item hidden w-full h-full flex-col justify-center items-center px-12 relative">
+            <div class="max-w-5xl w-full space-y-6">
+                <div class="text-center space-y-1">
+                    <span class="text-amber-400 font-mono-code text-xs uppercase tracking-widest">11 • Cas Concret : La Séquence du Samouraï</span>
+                    <h2 class="font-cinzel text-3xl sm:text-4xl font-bold text-white">Étude de Cas : Du Chaos au Découpage Maîtrisé</h2>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+                    <!-- Échec -->
+                    <div class="lg:col-span-4 bg-red-950/20 border border-red-500/40 rounded-2xl p-5 flex flex-col justify-between space-y-4">
+                        <div class="space-y-2">
+                            <span class="px-2.5 py-1 rounded bg-red-500/20 text-red-300 font-mono-code text-xs font-bold">❌ SANS MÉTHODE</span>
+                            <h3 class="font-bold text-white text-base">Le Prompt "Tout-en-un"</h3>
+                            <p class="text-xs italic text-red-200 bg-red-950/60 p-3 rounded border border-red-500/30">
+                                « Un samouraï sous la pluie dégaine son katana, tranche une goutte d'eau au ralenti puis regarde la caméra. »
+                            </p>
+                        </div>
+                        <ul class="text-xs text-slate-300 space-y-2">
+                            <li>• <strong>Sabre en caoutchouc :</strong> La lame se tord et fond pendant le dégainage.</li>
+                            <li>• <strong>3 actions en 4s :</strong> Mouvement confus, la goutte d'eau n'apparaît jamais.</li>
+                            <li>• <strong>Caméra indécise :</strong> Flottement artificiel typique des vidéos IA amateurs.</li>
+                        </ul>
+                    </div>
+
+                    <!-- Réussite : Découpage en 3 Clips -->
+                    <div class="lg:col-span-8 bg-emerald-950/15 border border-emerald-500/40 rounded-2xl p-5 space-y-4">
+                        <div class="flex items-center justify-between">
+                            <span class="px-2.5 py-1 rounded bg-emerald-500/20 text-emerald-300 font-mono-code text-xs font-bold">✅ AVEC DÉCOUPAGE & CHECKLISTS</span>
+                            <span class="text-xs font-mono-code text-slate-400">3 Clips assemblés = 9,5 secondes épiques</span>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                            <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-800 space-y-1.5">
+                                <span class="text-amber-400 font-mono-code font-bold text-[11px]">CLIP 1 (3.5s) • TENSION</span>
+                                <p class="text-white font-semibold">First Frame : Plan Américain</p>
+                                <p class="text-slate-400 text-[11px]">• <strong>Caméra :</strong> Slow Push In contre-plongée.<br>• <strong>Action :</strong> Immobile, seule sa poitrine respire et son pouce pousse la garde.<br>• <strong>Physique :</strong> Pluie sur l'armure + éclair Rim light.</p>
+                            </div>
+
+                            <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-800 space-y-1.5">
+                                <span class="text-cyan-400 font-mono-code font-bold text-[11px]">CLIP 2 (2.0s) • INSERT</span>
+                                <p class="text-white font-semibold">First + Last Frame Macro</p>
+                                <p class="text-slate-400 text-[11px]">• <strong>Caméra :</strong> Fixe Macro 85mm $f/1.4$.<br>• <strong>Action :</strong> L'acier traverse le cadre et fend une goutte d'eau en deux.<br>• <strong>Rythme :</strong> Ultra Slow-Motion 1000fps.</p>
+                            </div>
+
+                            <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-800 space-y-1.5">
+                                <span class="text-emerald-400 font-mono-code font-bold text-[11px]">CLIP 3 (4.0s) • PAYOFF</span>
+                                <p class="text-white font-semibold">First Frame : Gros Plan</p>
+                                <p class="text-slate-400 text-[11px]">• <strong>Caméra :</strong> Léger Dolly Out + Rack focus.<br>• <strong>Action :</strong> Il relève lentement le menton pour fixer l'objectif.<br>• <strong>Son :</strong> L-Cut du tonnerre et de la lame.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==========================================
+             SLIDE 13 : ATELIER PRATIQUE EN 3 ÉTAPES
+        =========================================== -->
+        <section class="slide-item hidden w-full h-full flex-col justify-center items-center px-12 relative">
+            <div class="max-w-5xl w-full space-y-7">
+                <div class="text-center space-y-1">
+                    <span class="text-amber-400 font-mono-code text-xs uppercase tracking-widest">12 • Atelier Pratique</span>
+                    <h2 class="font-cinzel text-3xl sm:text-4xl font-bold text-white">À Vous de Réaliser Votre Séquence en 3 Étapes !</h2>
+                    <p class="text-sm text-slate-400">Choisissez une scène courte (ex : <em>Un détective découvre un indice</em> ou <em>Une astronaute ouvre un sas</em>).</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <!-- Étape 1 -->
+                    <div class="bg-slate-900 border-2 border-amber-500/50 rounded-2xl p-6 space-y-4 relative">
+                        <div class="flex items-center justify-between">
+                            <span class="px-3 py-1 rounded-full bg-amber-400 text-slate-950 font-mono-code font-bold text-xs">ÉTAPE 01</span>
+                            <span class="text-2xl">📝</span>
+                        </div>
+                        <h3 class="text-xl font-bold text-white">Le Découpage en 3 Plans</h3>
+                        <p class="text-xs text-slate-300 leading-relaxed">
+                            Ouvrez votre IA de texte et demandez-lui de découper votre idée en 3 plans complémentaires :
+                        </p>
+                        <ul class="text-xs text-amber-200/90 font-mono-code space-y-1.5 bg-slate-950 p-3 rounded-lg border border-slate-800">
+                            <li>1. Plan Moyen + Travelling</li>
+                            <li>2. Très Gros Plan (Insert)</li>
+                            <li>3. Gros Plan Émotion (Visage)</li>
+                        </ul>
+                    </div>
+
+                    <!-- Étape 2 -->
+                    <div class="bg-slate-900 border-2 border-cyan-500/50 rounded-2xl p-6 space-y-4 relative">
+                        <div class="flex items-center justify-between">
+                            <span class="px-3 py-1 rounded-full bg-cyan-400 text-slate-950 font-mono-code font-bold text-xs">ÉTAPE 02</span>
+                            <span class="text-2xl">🖼️</span>
+                        </div>
+                        <h3 class="text-xl font-bold text-white">Vos First & Last Frames</h3>
+                        <p class="text-xs text-slate-300 leading-relaxed">
+                            Générez la <strong>First Frame</strong> de chacun des 3 plans avec votre IA d'image en gardant le même style.
+                        </p>
+                        <div class="text-xs text-cyan-200/90 bg-slate-950 p-3 rounded-lg border border-slate-800">
+                            <strong>Défi Bonus :</strong> Pour le Plan 2 (l'Insert), éditez votre First Frame pour créer aussi la <strong>Last Frame</strong> (ex: coffre fermé ➔ coffre ouvert).
+                        </div>
+                    </div>
+
+                    <!-- Étape 3 -->
+                    <div class="bg-slate-900 border-2 border-emerald-500/50 rounded-2xl p-6 space-y-4 relative">
+                        <div class="flex items-center justify-between">
+                            <span class="px-3 py-1 rounded-full bg-emerald-400 text-slate-950 font-mono-code font-bold text-xs">ÉTAPE 03</span>
+                            <span class="text-2xl">🎬</span>
+                        </div>
+                        <h3 class="text-xl font-bold text-white">Checklist Vidéo & Montage</h3>
+                        <p class="text-xs text-slate-300 leading-relaxed">
+                            Faites remplir la <strong>Checklist Vidéo en 8 points</strong> pour chaque plan et lancez vos 3 clips de 4 secondes !
+                        </p>
+                        <div class="text-xs text-emerald-200/90 bg-slate-950 p-3 rounded-lg border border-slate-800">
+                            Assemblez les 3 clips avec une nappe sonore continue (<em>L-Cut</em>) pour admirer le résultat.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==========================================
+             SLIDE 14 : RESSOURCES & RÉCAPITULATIF
+        =========================================== -->
+        <section class="slide-item hidden w-full h-full flex-col justify-center items-center px-12 relative">
+            <div class="max-w-5xl w-full space-y-6">
+                <div class="text-center space-y-1">
+                    <span class="text-amber-400 font-mono-code text-xs uppercase tracking-widest">13 • Boîte à Outils du Réalisateur</span>
+                    <h2 class="font-cinzel text-3xl sm:text-4xl font-bold text-white">Ressources Visuelles & Aide-Mémoire</h2>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4">
+                        <h3 class="font-bold text-amber-400 text-base">🌐 Encyclopédies Visuelles Cinéma (Gratuites)</h3>
+                        <ul class="space-y-3 text-xs text-slate-300">
+                            <li class="p-3 bg-slate-950 rounded-lg border border-slate-800">
+                                <strong class="text-white block">Eyecandy (eyecannndy.com)</strong>
+                                Bibliothèque interactive de GIFs classant toutes les techniques de caméra, transitions et mouvements visuels.
+                            </li>
+                            <li class="p-3 bg-slate-950 rounded-lg border border-slate-800">
+                                <strong class="text-white block">StudioBinder Camera Movement Guide</strong>
+                                Guides illustrés avec extraits de films sur les mouvements de caméra, le découpage et le montage.
+                            </li>
+                            <li class="p-3 bg-slate-950 rounded-lg border border-slate-800">
+                                <strong class="text-white block">FilmGrab & ShotDeck</strong>
+                                Bases de données de captures de films pour extraire des palettes colorimétriques et des cadrages de référence.
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 flex flex-col justify-between space-y-4">
+                        <div class="space-y-3">
+                            <h3 class="font-bold text-cyan-400 text-base">🔑 Les 4 Commandements à Retenir</h3>
+                            <div class="space-y-2.5 text-xs">
+                                <div class="flex items-center gap-3 p-2.5 bg-slate-950 rounded-lg border border-slate-800">
+                                    <span class="text-amber-400 font-bold">01</span>
+                                    <span>Toujours commencer par générer ses <strong>Images Clés (First/Last Frames)</strong>.</span>
+                                </div>
+                                <div class="flex items-center gap-3 p-2.5 bg-slate-950 rounded-lg border border-slate-800">
+                                    <span class="text-cyan-400 font-bold">02</span>
+                                    <span>Ne demander qu'<strong>un seul mouvement de caméra et une seule action</strong> par clip de 4 secondes.</span>
+                                </div>
+                                <div class="flex items-center gap-3 p-2.5 bg-slate-950 rounded-lg border border-slate-800">
+                                    <span class="text-emerald-400 font-bold">03</span>
+                                    <span>Utiliser les <strong>Plans d'Insert (ECU)</strong> et le <strong>Slow Motion</strong> pour sublimer la continuité.</span>
+                                </div>
+                                <div class="flex items-center gap-3 p-2.5 bg-slate-950 rounded-lg border border-slate-800">
+                                    <span class="text-purple-400 font-bold">04</span>
+                                    <span>Lier ses plans au montage avec le son (<strong>J-Cut / L-Cut</strong>) et les raccords dans le mouvement.</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="text-center pt-2">
+                            <span class="inline-block px-4 py-2 rounded-full bg-gradient-to-r from-amber-500/20 to-cyan-500/20 border border-amber-400/40 text-amber-300 text-xs font-mono-code">
+                                🎬 Silence sur le plateau… Action !
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- BARRE DE CONTRÔLE INFÉRIEURE -->
+    <footer class="no-print h-16 bg-[#0d1017] border-t border-slate-800/80 px-6 flex items-center justify-between z-30 shrink-0">
+        <div class="flex items-center gap-4">
+            <span id="slide-counter" class="font-mono-code text-sm text-amber-400 font-semibold">SLIDE 01 / 14</span>
+            <div class="w-40 sm:w-64 h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                <div id="progress-bar" class="h-full bg-gradient-to-r from-amber-400 to-cyan-400 transition-all duration-300" style="width: 7.14%"></div>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-3">
+            <button onclick="prevSlide()" class="px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold flex items-center gap-2 border border-slate-700 transition">
+                ← Précédent
+            </button>
+            <button onclick="nextSlide()" class="px-5 py-2 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold flex items-center gap-2 shadow-lg shadow-amber-500/20 transition">
+                Suivant →
+            </button>
+        </div>
+    </footer>
+
+    <!-- MODALE VUE GRILLE (OVERVIEW DES 14 SLIDES) -->
+    <div id="overview-modal" class="no-print fixed inset-0 bg-slate-950/95 backdrop-blur-md z-50 hidden flex-col p-8 overflow-y-auto">
+        <div class="max-w-6xl w-full mx-auto space-y-6">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-4">
+                <h3 class="font-cinzel text-2xl font-bold text-white">Navigation Rapide • 14 Slides de Formation</h3>
+                <button onclick="toggleOverview()" class="px-4 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-mono-code">
+                    Fermer [Échap]
+                </button>
+            </div>
+            <div id="overview-grid" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4"></div>
+        </div>
+    </div>
+
+    <script>
+        const slides = document.querySelectorAll('.slide-item');
+        const counter = document.getElementById('slide-counter');
+        const progressBar = document.getElementById('progress-bar');
+        const overviewModal = document.getElementById('overview-modal');
+        const overviewGrid = document.getElementById('overview-grid');
+        let currentIndex = 0;
+
+        const slideTitles = [
+            "1. Couverture : L'Art de la Vidéo IA",
+            "2. Le Réflexe du Réalisateur",
+            "3. Le Mouton sur des Rails",
+            "4. Hiérarchie de l'Attention",
+            "5. Les 6 Mouvements de Caméra",
+            "6. Cadrage, Plans & Angles",
+            "7. Découpage en 5 Plans",
+            "8. Rythme & Transitions",
+            "9. First/Last Frame & Cohérence",
+            "10. Les 8 Barrières Temporelles",
+            "11. La Checklist Vidéo Complète",
+            "12. Étude de Cas : Le Samouraï",
+            "13. Atelier Pratique en 3 Étapes",
+            "14. Ressources & Aide-Mémoire"
+        ];
+
+        function updateSlide(index) {
+            slides.forEach((s, i) => {
+                if (i === index) {
+                    s.classList.remove('hidden');
+                    s.classList.add('flex');
+                } else {
+                    s.classList.add('hidden');
+                    s.classList.remove('flex');
+                }
+            });
+            currentIndex = index;
+            const num = String(index + 1).padStart(2, '0');
+            const total = String(slides.length).padStart(2, '0');
+            counter.textContent = `SLIDE ${num} / ${total}`;
+            progressBar.style.width = `${((index + 1) / slides.length) * 100}%`;
+        }
+
+        function nextSlide() {
+            if (currentIndex < slides.length - 1) {
+                updateSlide(currentIndex + 1);
+            }
+        }
+
+        function prevSlide() {
+            if (currentIndex > 0) {
+                updateSlide(currentIndex - 1);
+            }
+        }
+
+        function toggleOverview() {
+            if (overviewModal.classList.contains('hidden')) {
+                overviewGrid.innerHTML = '';
+                slideTitles.forEach((title, idx) => {
+                    const btn = document.createElement('button');
+                    btn.className = `p-4 rounded-xl border text-left transition flex flex-col justify-between h-24 ${
+                        idx === currentIndex 
+                        ? 'bg-amber-500/20 border-amber-400 text-white' 
+                        : 'bg-slate-900 border-slate-800 hover:border-slate-600 text-slate-300'
+                    }`;
+                    btn.innerHTML = `
+                        <span class="text-[10px] font-mono-code text-amber-400">SLIDE ${String(idx + 1).padStart(2, '0')}</span>
+                        <span class="text-xs font-bold leading-snug">${title.split(': ')[1] || title}</span>
+                    `;
+                    btn.onclick = () => {
+                        updateSlide(idx);
+                        toggleOverview();
+                    };
+                    overviewGrid.appendChild(btn);
+                });
+                overviewModal.classList.remove('hidden');
+                overviewModal.classList.add('flex');
+            } else {
+                overviewModal.classList.add('hidden');
+                overviewModal.classList.remove('flex');
+            }
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === ' ') {
+                e.preventDefault();
+                nextSlide();
+            } else if (e.key === 'ArrowLeft') {
+                e.preventDefault();
+                prevSlide();
+            } else if (e.key === 'Escape' && !overviewModal.classList.contains('hidden')) {
+                toggleOverview();
+            }
+        });
+    </script>
+</body>
+</html>
